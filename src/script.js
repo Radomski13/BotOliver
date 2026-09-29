@@ -1,55 +1,22 @@
 /* =====================================================================
-   STORE SETTINGS — edit everything in this block.
+   Store page. All content (text, menu, products, shipping, promo codes)
+   is edited in the admin page at /admin — nothing to change here.
    ===================================================================== */
 
-const STORE = {
-    name: 'Frag Supply Co.',
-    tagline: 'Merch for the clutch',
-    currency: 'USD',
-
-    shipping: {
-        flatRate: 5.99,          // charged when order is under the free-shipping line
-        freeOver: 75,            // subtotal (after discount) that unlocks free shipping
-    },
-
-    contact: {
-        email: 'support@example.com',
-        instagram: '@yourstore',
-    },
-
-    // Link to your discount mini game. Leave '' to hide the menu item.
-    discountGameUrl: '',
-
-    // Checkout goes to Shopify using a cart link:
-    //   https://<shopifyDomain>/cart/<variantId>:<qty>,...?discount=<CODE>
-    // Put your store domain here (e.g. 'your-store.myshopify.com') and the
-    // Shopify variant ID for each size on each product (set those in /admin).
-    // Leave '' and the Checkout button shows a "not connected yet" message.
-    shopifyDomain: '',
-
-    // Promo codes shown in the cart. These only preview the discount here —
-    // create the SAME codes in Shopify so they actually apply at checkout.
-    promoCodes: {
-        HEADSHOT10: { type: 'percent', value: 10, label: '10% off' },
-        CLUTCH15:   { type: 'percent', value: 15, label: '15% off' },
-        ECO5:       { type: 'fixed',   value: 5,  label: '$5 off' },
-    },
-};
-
-// Products now come from the server (edit them at /admin).
+// Filled from the server on page load.
+let SETTINGS = null;
 let PRODUCTS = [];
 
-async function loadProducts() {
-    const res = await fetch('/api/products', { cache: 'no-cache' });
-    if (!res.ok) throw new Error('Could not load products');
-    PRODUCTS = await res.json();
+async function loadStore() {
+    const res = await fetch('/api/store', { cache: 'no-cache' });
+    if (!res.ok) throw new Error('Could not load store');
+    const data = await res.json();
+    SETTINGS = data.settings;
+    PRODUCTS = data.products;
 }
 
-/* =====================================================================
-   Store logic — no need to edit below this line.
-   ===================================================================== */
-
-const money = (n) => new Intl.NumberFormat('en-US', { style: 'currency', currency: STORE.currency }).format(n);
+const money = (n) => new Intl.NumberFormat('en-US', { style: 'currency', currency: SETTINGS.commerce.currency || 'USD' }).format(n);
+const moneyShort = (n) => money(n).replace(/\.00$/, '');
 
 const sounds = {
     click: new Audio('sounds/menu_click.wav'),
@@ -68,7 +35,7 @@ function play(name) {
 /* ---------- Cart state (saved in the browser) ---------- */
 
 const CART_KEY = 'frag-cart-v1';
-const PROMO_KEY = 'frag-promo-v1';
+const PROMO_KEY = 'frag-promo-v2';
 
 const cart = {
     items: [],
@@ -80,8 +47,8 @@ const cart = {
             this.items = Array.isArray(saved)
                 ? saved.filter(i => PRODUCTS.some(p => p.id === i.id) && i.qty > 0)
                 : [];
-            const promo = localStorage.getItem(PROMO_KEY);
-            this.promo = promo && STORE.promoCodes[promo] ? promo : null;
+            const promo = JSON.parse(localStorage.getItem(PROMO_KEY) || 'null');
+            this.promo = promo && promo.code && promo.type ? promo : null;
         } catch (e) {
             this.items = [];
             this.promo = null;
@@ -91,7 +58,7 @@ const cart = {
     save() {
         try {
             localStorage.setItem(CART_KEY, JSON.stringify(this.items));
-            if (this.promo) localStorage.setItem(PROMO_KEY, this.promo);
+            if (this.promo) localStorage.setItem(PROMO_KEY, JSON.stringify(this.promo));
             else localStorage.removeItem(PROMO_KEY);
         } catch (e) { /* storage blocked — cart still works for this visit */ }
         updateCartCounts();
@@ -127,13 +94,13 @@ const cart = {
         }, 0);
 
         let discount = 0;
-        const code = this.promo && STORE.promoCodes[this.promo];
+        const code = this.promo;
         if (code && subtotal > 0) {
             discount = code.type === 'percent' ? subtotal * code.value / 100 : Math.min(code.value, subtotal);
         }
 
         const afterDiscount = subtotal - discount;
-        const shipping = subtotal === 0 || afterDiscount >= STORE.shipping.freeOver ? 0 : STORE.shipping.flatRate;
+        const shipping = subtotal === 0 || afterDiscount >= SETTINGS.commerce.freeOver ? 0 : SETTINGS.commerce.flatRate;
         return { subtotal, discount, afterDiscount, shipping, total: afterDiscount + shipping };
     },
 };
@@ -147,14 +114,91 @@ function updateCartCounts() {
 
 /* ---------- Shared helpers ---------- */
 
-function applyStoreText() {
-    document.title = `${STORE.name} | Counter-Strike Inspired Merch`;
-    document.querySelectorAll('[data-store-name]').forEach(el => el.textContent = STORE.name);
-    document.querySelectorAll('[data-store-tagline]').forEach(el => el.textContent = STORE.tagline);
-    document.querySelectorAll('[data-free-ship]').forEach(el => el.textContent = money(STORE.shipping.freeOver).replace('.00', ''));
-    document.querySelectorAll('[data-flat-ship]').forEach(el => el.textContent = money(STORE.shipping.flatRate));
-    document.querySelectorAll('[data-contact-email]').forEach(el => el.value = STORE.contact.email);
-    document.querySelectorAll('[data-contact-insta]').forEach(el => el.value = STORE.contact.instagram);
+// Replace {free_shipping_min} and {flat_rate} with the current shipping numbers.
+function fillTokens(text) {
+    return String(text || '')
+        .replace(/\{free_shipping_min\}/g, moneyShort(SETTINGS.commerce.freeOver))
+        .replace(/\{flat_rate\}/g, money(SETTINGS.commerce.flatRate));
+}
+
+// Plain text -> safe HTML with clickable links/emails and paragraph breaks.
+function richText(text) {
+    const linked = escapeHtml(fillTokens(text))
+        .replace(/\bhttps?:\/\/[^\s<]+[^\s<.,;:!?)]/g, url => `<a href="${url}" target="_blank" rel="noopener">${url.replace(/^https?:\/\//, '')}</a>`)
+        .replace(/(^|[\s(])([a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,})/gi, (m, pre, email) => `${pre}<a href="mailto:${email}">${email}</a>`);
+    return linked.split(/\n{2,}/).map(p => `<p>${p.replace(/\n/g, '<br>')}</p>`).join('');
+}
+
+function renderSite() {
+    const { site, menu } = SETTINGS;
+    document.title = site.pageTitle || site.name;
+    const meta = document.querySelector('meta[name="description"]');
+    if (meta) meta.setAttribute('content', site.metaDescription || '');
+    document.querySelectorAll('[data-store-name]').forEach(el => el.textContent = site.name);
+    document.querySelectorAll('[data-store-tagline]').forEach(el => {
+        el.textContent = site.tagline;
+        el.hidden = !site.tagline;
+    });
+    const footer = document.getElementById('site-footer');
+    footer.textContent = site.footer;
+    footer.hidden = !site.footer;
+
+    const nav = document.getElementById('menu-items');
+    nav.innerHTML = '';
+    menu.filter(m => m.visible).forEach(m => {
+        const a = document.createElement('a');
+        a.className = 'menu-item';
+        a.textContent = m.label;
+        if (m.type === 'link') {
+            a.href = m.url;
+            if (m.newTab) { a.target = '_blank'; a.rel = 'noopener'; }
+            a.addEventListener('click', () => play('click'));
+        } else {
+            a.href = '#';
+            a.dataset.section = m.type;
+            if (m.type === 'cart') {
+                const count = document.createElement('span');
+                count.className = 'cart-count';
+                a.append(' ', count);
+            }
+        }
+        nav.appendChild(a);
+    });
+}
+
+function renderWelcome() {
+    const w = SETTINGS.welcome;
+    document.getElementById('welcome-title').textContent = w.windowTitle;
+    document.getElementById('welcome-map').textContent = w.mapName;
+    document.getElementById('welcome-map-row').hidden = !w.mapName;
+    document.getElementById('welcome-start').textContent = w.startLabel;
+
+    let html = '';
+    if (w.headline) html += `<p class="welcome-headline">${escapeHtml(fillTokens(w.headline))}</p>`;
+    if (w.body) html += richText(w.body);
+    if (w.perks.length) html += `<ul class="perks">${w.perks.map(p => `<li>${escapeHtml(fillTokens(p))}</li>`).join('')}</ul>`;
+    if (w.hint) html += `<p class="hint">${escapeHtml(fillTokens(w.hint))}</p>`;
+    document.getElementById('welcome-body').innerHTML = html;
+}
+
+function renderInfo() {
+    const info = SETTINGS.info;
+    document.getElementById('info-title').textContent = info.windowTitle;
+    document.getElementById('info-tabs').innerHTML = info.tabs.map((t, i) => {
+        let table = '';
+        if (t.table.length) {
+            const [head, ...rows] = t.table;
+            const row = (cells, cls) => `<div class="size-row${cls}">${cells.map(c => `<span>${escapeHtml(c)}</span>`).join('')}</div>`;
+            table = `<div class="size-table">${row(head, ' head')}${rows.map(r => row(r, '')).join('')}</div>`;
+        }
+        return `
+            <input class="radiotab" name="info-tabs" type="radio" id="info-tab-${i}" ${i === 0 ? 'checked' : ''} />
+            <label class="label" for="info-tab-${i}">${escapeHtml(t.title)}</label>
+            <div class="panel">
+                <div class="info-text">${t.body ? richText(t.body) : ''}${table}</div>
+                ${t.note ? `<p class="info-small">${escapeHtml(fillTokens(t.note))}</p>` : ''}
+            </div>`;
+    }).join('');
 }
 
 function showAlert(title, html) {
@@ -330,25 +374,25 @@ function initCartDialog() {
         const discountRow = dialog.querySelector('#discount-row');
         discountRow.hidden = !(cart.promo && t.discount > 0);
         if (cart.promo) {
-            dialog.querySelector('#discount-label').textContent = `Discount (${cart.promo})`;
+            dialog.querySelector('#discount-label').textContent = `Discount (${cart.promo.code})`;
             dialog.querySelector('#discount-amount').textContent = `-${money(t.discount)}`;
         }
 
         dialog.querySelector('#shipping').textContent = t.subtotal === 0 ? money(0) : (t.shipping === 0 ? 'FREE' : money(t.shipping));
         dialog.querySelector('#grand-total').textContent = money(t.total);
 
-        const pct = Math.min(100, (t.afterDiscount / STORE.shipping.freeOver) * 100);
+        const pct = Math.min(100, (t.afterDiscount / SETTINGS.commerce.freeOver) * 100);
         dialog.querySelector('#ship-bar').style.width = `${pct}%`;
         const shipNote = dialog.querySelector('#ship-note');
-        if (t.subtotal === 0) shipNote.textContent = `Free shipping over ${money(STORE.shipping.freeOver)}`;
+        if (t.subtotal === 0) shipNote.textContent = `Free shipping over ${money(SETTINGS.commerce.freeOver)}`;
         else if (t.shipping === 0) shipNote.textContent = 'Free shipping unlocked.';
-        else shipNote.textContent = `${money(STORE.shipping.freeOver - t.afterDiscount)} away from free shipping`;
+        else shipNote.textContent = `${money(SETTINGS.commerce.freeOver - t.afterDiscount)} away from free shipping`;
 
         checkoutBtn.disabled = cart.items.length === 0;
-        if (cart.promo && !promoInput.value) promoInput.value = cart.promo;
+        if (cart.promo && !promoInput.value) promoInput.value = cart.promo.code;
     }
 
-    function applyPromo() {
+    async function applyPromo() {
         const code = promoInput.value.trim().toUpperCase();
         promoMsg.classList.remove('error');
 
@@ -360,14 +404,22 @@ function initCartDialog() {
             return;
         }
 
-        if (STORE.promoCodes[code]) {
-            cart.promo = code;
+        promoMsg.textContent = 'Checking...';
+        try {
+            const res = await fetch('/api/promo', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code }),
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok || !data.valid) throw new Error(data.error || 'Invalid code. Nice try.');
+            cart.promo = { code: data.code, type: data.type, value: data.value, label: data.label };
             cart.save();
-            promoInput.value = code;
-            promoMsg.textContent = `${code} applied: ${STORE.promoCodes[code].label}`;
+            promoInput.value = data.code;
+            promoMsg.textContent = `${data.code} applied: ${data.label}`;
             play('go');
-        } else {
-            promoMsg.textContent = 'Invalid code. Nice try.';
+        } catch (err) {
+            promoMsg.textContent = err.message;
             promoMsg.classList.add('error');
         }
         render();
@@ -381,10 +433,10 @@ function initCartDialog() {
             return !p.variants || !p.variants[i.size];
         });
 
-        if (!STORE.shopifyDomain || missing.length) {
+        if (!SETTINGS.commerce.shopifyDomain || missing.length) {
             showAlert('Checkout',
                 'Checkout isn\'t connected yet.<br><br>' +
-                'Add your Shopify domain and variant IDs in <b>script.js</b> (STORE settings) to turn it on.');
+                'Add your Shopify domain and product variant IDs in the admin page to turn it on.');
             return;
         }
 
@@ -393,8 +445,8 @@ function initCartDialog() {
             return `${p.variants[i.size]}:${i.qty}`;
         }).join(',');
 
-        let url = `https://${STORE.shopifyDomain}/cart/${lines}`;
-        if (cart.promo) url += `?discount=${encodeURIComponent(cart.promo)}`;
+        let url = `https://${SETTINGS.commerce.shopifyDomain}/cart/${lines}`;
+        if (cart.promo) url += `?discount=${encodeURIComponent(cart.promo.code)}`;
         play('go');
         window.location.href = url;
     }
@@ -430,15 +482,30 @@ function initInfoDialog() {
 
 /* ---------- Start up ---------- */
 
+// Used only if the server can't be reached, so the page still draws.
+const FALLBACK_SETTINGS = {
+    site: { name: 'Store', tagline: '', pageTitle: 'Store', metaDescription: '', footer: '' },
+    menu: [{ type: 'buy', label: 'Buy menu', visible: true }, { type: 'cart', label: 'Cart', visible: true }],
+    welcome: { showOnFirstVisit: false, windowTitle: 'Welcome', mapName: '', headline: '', body: '', perks: [], hint: '', startLabel: 'Start' },
+    info: { windowTitle: 'Store Info', tabs: [{ title: 'Info', body: 'Store info is unavailable right now.', table: [], note: '' }] },
+    commerce: { currency: 'USD', flatRate: 0, freeOver: 0, shopifyDomain: '' },
+};
+
 document.addEventListener('DOMContentLoaded', async () => {
+    let loadFailed = false;
     try {
-        await loadProducts();
+        await loadStore();
     } catch (e) {
-        PRODUCTS = [];
         console.error(e);
+        SETTINGS = FALLBACK_SETTINGS;
+        PRODUCTS = [];
+        loadFailed = true;
     }
+
+    renderSite();
+    renderWelcome();
+    renderInfo();
     cart.load();
-    applyStoreText();
 
     const welcome = initWelcomeDialog();
     const buy = initBuyDialog();
@@ -447,24 +514,20 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     updateCartCounts();
 
-    const discountItem = document.getElementById('discount-menu-item');
-    if (STORE.discountGameUrl) discountItem.hidden = false;
-
     document.querySelectorAll('.cs-dialog .close').forEach(btn => {
         btn.addEventListener('click', () => play('close'));
     });
 
-    document.querySelectorAll('.menu-item').forEach(item => {
+    document.querySelectorAll('.menu-item[data-section]').forEach(item => {
         item.addEventListener('click', (e) => {
             e.preventDefault();
             play('click');
 
             switch (item.dataset.section) {
-                case 'buy':      openOnly(buy); break;
-                case 'cart':     cartDialog.render(); openOnly(cartDialog); break;
-                case 'info':     openOnly(info); break;
-                case 'welcome':  openOnly(welcome); break;
-                case 'discount': window.open(STORE.discountGameUrl, '_blank', 'noopener'); break;
+                case 'buy':     openOnly(buy); break;
+                case 'cart':    openOnly(cartDialog); break;
+                case 'info':    openOnly(info); break;
+                case 'welcome': openOnly(welcome); break;
             }
         });
     });
@@ -473,7 +536,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     const origShow = cartDialog.showModal.bind(cartDialog);
     cartDialog.showModal = () => { cartDialog.render(); origShow(); };
 
+    if (loadFailed) {
+        showAlert('Connection problem', 'The store couldn\'t load right now. Please refresh the page in a moment.');
+        return;
+    }
+
     // Show the welcome screen on first visit; returning shoppers go straight to the menu.
+    if (!SETTINGS.welcome.showOnFirstVisit) return;
     let seen = false;
     try { seen = sessionStorage.getItem('frag-welcomed') === '1'; } catch (e) {}
     if (!seen) {

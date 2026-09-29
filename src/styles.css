@@ -659,3 +659,24 @@ body {
 .footer-btns .cs-btn {
     white-space: nowrap;
 }
+
+/* ===== Content from the admin ===== */
+
+[hidden] {
+    display: none !important;
+}
+
+.menu-items {
+    display: flex;
+    flex-direction: column;
+}
+
+.info-text a,
+.welcome-dialog .description a {
+    color: var(--accent);
+    text-decoration: underline;
+}
+
+.info-text .size-table {
+    margin-top: 4px;
+}

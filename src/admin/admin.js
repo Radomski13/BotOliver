@@ -78,7 +78,7 @@ function confirmBox(text) {
 }
 
 async function okToLeave() {
-    return !state.dirty || confirmBox('You have unsaved changes. Discard them?');
+    return !state.dirty || confirmBox('You have unsaved product changes. Discard them?');
 }
 
 /* ---------- Views ---------- */
@@ -353,6 +353,9 @@ $('#login-form').addEventListener('submit', async (e) => {
 
 $('#logout-btn').addEventListener('click', async () => {
     if (!(await okToLeave())) return;
+    if (typeof siteEditor !== 'undefined' && siteEditor.dirty &&
+        !(await confirmBox('You have unsaved site content changes. Discard them?'))) return;
+    if (typeof siteEditor !== 'undefined') { siteEditor.data = null; setSettingsDirty(false); showView('products'); }
     await api('POST', '/api/logout').catch(() => {});
     setDirty(false);
     showLogin();

@@ -15,20 +15,14 @@
     <div class="container">
         <div class="menu">
             <div class="store-logo">
-                <span class="store-name" data-store-name>Frag Supply Co.</span>
-                <span class="store-tagline" data-store-tagline>Merch for the clutch</span>
+                <span class="store-name" data-store-name></span>
+                <span class="store-tagline" data-store-tagline></span>
             </div>
-            <a class="menu-item" data-section="buy">Buy menu</a>
-            <a class="menu-item" data-section="cart">Cart <span class="cart-count">(0)</span></a>
-            <a class="menu-item" data-section="discount" id="discount-menu-item" hidden>Win a discount</a>
-            <a class="menu-item" data-section="info">Store info</a>
-            <a class="menu-item" data-section="welcome">Welcome</a>
+            <nav class="menu-items" id="menu-items"></nav>
         </div>
     </div>
 
-    <p class="site-footer">
-        Not affiliated with or endorsed by Valve Corporation. Counter-Strike is a trademark of Valve Corporation.
-    </p>
+    <p class="site-footer" id="site-footer"></p>
 
     <!-- WELCOME -->
     <dialog class="cs-dialog welcome-dialog" id="welcome-dialog">
@@ -36,7 +30,7 @@
             <div class="heading">
                 <div class="wrapper">
                     <div class="icon"></div>
-                    <p class="text">Join Server</p>
+                    <p class="text" id="welcome-title">Welcome</p>
                 </div>
                 <button class="cs-btn close" type="button"></button>
             </div>
@@ -45,26 +39,14 @@
                     <input class="radiotab" name="welcome-tabs" type="radio" id="welcome-tab" checked />
                     <label class="label" for="welcome-tab">Server</label>
                     <div class="panel">
-                        <div class="map-selector">
+                        <div class="map-selector" id="welcome-map-row">
                             <label>Map</label>
                             <select class="cs-select">
-                                <option selected>de_merch</option>
+                                <option selected id="welcome-map"></option>
                             </select>
                         </div>
                         <hr class="cs-hr" />
-                        <div class="description">
-                            <p class="welcome-headline">Welcome to <span data-store-name>Frag Supply Co.</span></p>
-                            <p>
-                                Gear for people who have played "one more game" at 3 AM.
-                                Tees, hoodies, caps, desk mats and stickers, designed by players, for players.
-                            </p>
-                            <ul class="perks">
-                                <li>Free shipping on orders over <span data-free-ship>$75</span></li>
-                                <li>Printed to order, ships in 3–5 business days</li>
-                                <li>Easy 30-day returns</li>
-                            </ul>
-                            <p class="hint">Hit <b>Start</b> to open the buy menu.</p>
-                        </div>
+                        <div class="description" id="welcome-body"></div>
                     </div>
                 </div>
             </div>
@@ -193,62 +175,12 @@
             <div class="heading">
                 <div class="wrapper">
                     <div class="icon"></div>
-                    <p class="text">Store Info</p>
+                    <p class="text" id="info-title">Store Info</p>
                 </div>
                 <button class="cs-btn close" type="button"></button>
             </div>
             <div class="content">
-                <div class="cs-tabs">
-                    <input class="radiotab" name="info-tabs" type="radio" id="info-shipping" checked />
-                    <label class="label" for="info-shipping">Shipping</label>
-                    <div class="panel">
-                        <div class="info-text">
-                            <p>Every item is printed to order. Orders ship in 3–5 business days.</p>
-                            <p>US shipping is a flat <span data-flat-ship>$5.99</span>, or free on orders over <span data-free-ship>$75</span>.</p>
-                            <p>You'll get a tracking number by email as soon as your order ships.</p>
-                        </div>
-                    </div>
-
-                    <input class="radiotab" name="info-tabs" type="radio" id="info-returns" />
-                    <label class="label" for="info-returns">Returns</label>
-                    <div class="panel">
-                        <div class="info-text">
-                            <p>Not happy? Send it back within 30 days of delivery for a refund or exchange.</p>
-                            <p>Items must be unworn and unwashed. Stickers are final sale.</p>
-                            <p>Wrong size? Exchanges are free.</p>
-                        </div>
-                    </div>
-
-                    <input class="radiotab" name="info-tabs" type="radio" id="info-sizes" />
-                    <label class="label" for="info-sizes">Sizes</label>
-                    <div class="panel">
-                        <div class="size-table">
-                            <div class="size-row head"><span>Size</span><span>Chest (in)</span><span>Length (in)</span></div>
-                            <div class="size-row"><span>S</span><span>34–36</span><span>28</span></div>
-                            <div class="size-row"><span>M</span><span>38–40</span><span>29</span></div>
-                            <div class="size-row"><span>L</span><span>42–44</span><span>30</span></div>
-                            <div class="size-row"><span>XL</span><span>46–48</span><span>31</span></div>
-                            <div class="size-row"><span>2XL</span><span>50–52</span><span>32</span></div>
-                        </div>
-                        <p class="info-small">Unisex fit. Between sizes? Size up.</p>
-                    </div>
-
-                    <input class="radiotab" name="info-tabs" type="radio" id="info-contact" />
-                    <label class="label" for="info-contact">Contact</label>
-                    <div class="panel">
-                        <div class="info-text">
-                            <div class="contact-field">
-                                <label for="contact-email">Email</label>
-                                <input type="text" id="contact-email" class="cs-input" readonly data-contact-email value="support@example.com">
-                            </div>
-                            <div class="contact-field">
-                                <label for="contact-insta">Instagram</label>
-                                <input type="text" id="contact-insta" class="cs-input" readonly data-contact-insta value="@yourstore">
-                            </div>
-                            <p class="info-small">We reply within one business day.</p>
-                        </div>
-                    </div>
-                </div>
+                <div class="cs-tabs" id="info-tabs"></div>
             </div>
             <menu class="footer-btns">
                 <button type="button" class="cs-btn" id="info-ok">OK</button>

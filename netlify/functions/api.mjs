@@ -3,6 +3,7 @@ import {
     json, loadProducts, saveProducts, cleanProduct, slugify, uniqueId,
     isAuthed, passwordMatches, makeSessionToken, sessionCookie, SESSION_TTL_SEC,
     dataStore, imageStore, MAX_IMAGE_BYTES,
+    loadSettings, saveSettings, cleanSettings, publicSettings, promoLabel,
 } from '../lib/shared.mjs';
 
 export const config = { path: '/api/*' };
@@ -29,6 +30,25 @@ async function route(req, context) {
     if (method === 'GET' && p === '/api/products') {
         const products = await loadProducts();
         return json(200, products.filter(pr => !pr.hidden).map(({ hidden, ...rest }) => rest));
+    }
+
+    // Public: everything the store page needs in one request.
+    if (method === 'GET' && p === '/api/store') {
+        const [products, settings] = await Promise.all([loadProducts(), loadSettings()]);
+        return json(200, {
+            settings: publicSettings(settings),
+            products: products.filter(pr => !pr.hidden).map(({ hidden, ...rest }) => rest),
+        });
+    }
+
+    // Public: check a promo code without exposing the full list.
+    if (method === 'POST' && p === '/api/promo') {
+        const { code } = await readJson(req);
+        const wanted = String(code || '').trim().toUpperCase();
+        const settings = await loadSettings();
+        const match = settings.commerce.promoCodes.find(pc => pc.code === wanted);
+        if (!match) return json(200, { valid: false, error: 'Invalid code. Nice try.' });
+        return json(200, { valid: true, ...match, label: promoLabel(match, settings.commerce.currency) });
     }
 
     if (method === 'GET' && p === '/api/session') {
@@ -65,6 +85,17 @@ async function route(req, context) {
     // Everything below needs a logged-in admin.
     if (!p.startsWith('/api/admin/')) return json(404, { error: 'Not found' });
     if (!isAuthed(req)) return json(401, { error: 'Not logged in.' });
+
+    if (method === 'GET' && p === '/api/admin/settings') {
+        return json(200, await loadSettings());
+    }
+
+    if (method === 'PUT' && p === '/api/admin/settings') {
+        const { errors, settings } = cleanSettings(await readJson(req));
+        if (errors.length) return json(400, { error: errors.join(' ') });
+        await saveSettings(settings);
+        return json(200, settings);
+    }
 
     if (method === 'GET' && p === '/api/admin/products') {
         return json(200, await loadProducts());

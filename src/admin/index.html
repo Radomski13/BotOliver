@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
-    <title>Product Admin</title>
+    <title>Store Admin</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/ekmas/cs16.css@main/css/cs16.min.css">
     <link rel="stylesheet" href="/admin/admin.css">
 </head>
@@ -33,14 +33,22 @@
     <!-- ADMIN -->
     <section id="admin-view" class="admin-view" hidden>
         <header class="topbar">
-            <p class="title">Product Admin</p>
+            <p class="title">Store Admin</p>
             <div class="topbar-actions">
                 <a class="cs-btn" href="/" target="_blank" rel="noopener">View store</a>
                 <button type="button" class="cs-btn" id="logout-btn">Log out</button>
             </div>
         </header>
 
-        <main class="layout">
+        <nav class="section-nav" id="section-nav">
+            <button type="button" class="cs-btn active" data-view="products">Products</button>
+            <button type="button" class="cs-btn" data-view="home">Home page</button>
+            <button type="button" class="cs-btn" data-view="welcome">Welcome</button>
+            <button type="button" class="cs-btn" data-view="info">Store info</button>
+            <button type="button" class="cs-btn" data-view="checkout">Checkout &amp; promos</button>
+        </nav>
+
+        <main class="layout" id="view-products">
             <!-- Product list -->
             <div class="panel-box list-box">
                 <div class="box-head">
@@ -135,7 +143,142 @@
                 </div>
             </form>
         </main>
+
+        <!-- SITE CONTENT (settings) -->
+        <form class="settings-wrap" id="settings-form" novalidate hidden>
+
+            <!-- Home page -->
+            <div class="panel-box settings-view" data-view="home" hidden>
+                <div class="box-head"><span>Home page</span></div>
+                <div class="form-grid">
+                    <div class="field">
+                        <label for="s-name">Store name <span class="hint">(big title on the home page)</span></label>
+                        <input type="text" id="s-name" class="cs-input" maxlength="60" data-path="site.name">
+                    </div>
+                    <div class="field">
+                        <label for="s-tagline">Tagline <span class="hint">(under the name)</span></label>
+                        <input type="text" id="s-tagline" class="cs-input" maxlength="120" data-path="site.tagline">
+                    </div>
+                    <div class="field wide">
+                        <label for="s-title">Browser tab title <span class="hint">(also shows in Google)</span></label>
+                        <input type="text" id="s-title" class="cs-input" maxlength="120" data-path="site.pageTitle">
+                    </div>
+                    <div class="field wide">
+                        <label for="s-meta">Search description <span class="hint">(the snippet under your link in Google)</span></label>
+                        <textarea id="s-meta" class="cs-input" rows="2" maxlength="300" data-path="site.metaDescription"></textarea>
+                    </div>
+                    <div class="field wide">
+                        <label for="s-footer">Footer text <span class="hint">(small print, bottom right)</span></label>
+                        <textarea id="s-footer" class="cs-input" rows="2" maxlength="300" data-path="site.footer"></textarea>
+                    </div>
+                </div>
+
+                <div class="sub-head">
+                    <span>Menu <span class="hint">(top to bottom, as shown on the home page)</span></span>
+                    <button type="button" class="cs-btn" id="add-menu-link">+ Add link</button>
+                </div>
+                <div class="list-editor" id="menu-editor"></div>
+            </div>
+
+            <!-- Welcome -->
+            <div class="panel-box settings-view" data-view="welcome" hidden>
+                <div class="box-head"><span>Welcome window</span></div>
+                <div class="form-grid">
+                    <div class="field wide checks">
+                        <div class="cs-checkbox">
+                            <input id="s-w-show" type="checkbox" data-path="welcome.showOnFirstVisit">
+                            <label class="cs-checkbox__label" for="s-w-show">Pop up automatically on a visitor's first page view</label>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label for="s-w-title">Window title</label>
+                        <input type="text" id="s-w-title" class="cs-input" maxlength="40" data-path="welcome.windowTitle">
+                    </div>
+                    <div class="field">
+                        <label for="s-w-map">Map name <span class="hint">(leave empty to hide)</span></label>
+                        <input type="text" id="s-w-map" class="cs-input" maxlength="40" data-path="welcome.mapName">
+                    </div>
+                    <div class="field wide">
+                        <label for="s-w-headline">Headline</label>
+                        <input type="text" id="s-w-headline" class="cs-input" maxlength="120" data-path="welcome.headline">
+                    </div>
+                    <div class="field wide">
+                        <label for="s-w-body">Main text <span class="hint">(blank line = new paragraph; links and emails become clickable)</span></label>
+                        <textarea id="s-w-body" class="cs-input" rows="4" maxlength="2000" data-path="welcome.body"></textarea>
+                    </div>
+                    <div class="field wide">
+                        <label for="s-w-perks">Bullet points <span class="hint">(one per line)</span></label>
+                        <textarea id="s-w-perks" class="cs-input" rows="4" data-path="welcome.perks" data-kind="lines"></textarea>
+                    </div>
+                    <div class="field">
+                        <label for="s-w-hint">Small hint line</label>
+                        <input type="text" id="s-w-hint" class="cs-input" maxlength="200" data-path="welcome.hint">
+                    </div>
+                    <div class="field">
+                        <label for="s-w-start">Start button text <span class="hint">(opens the buy menu)</span></label>
+                        <input type="text" id="s-w-start" class="cs-input" maxlength="20" data-path="welcome.startLabel">
+                    </div>
+                </div>
+                <p class="hint token-hint">Tip: type <b>{free_shipping_min}</b> or <b>{flat_rate}</b> in any text and it fills in your current shipping numbers.</p>
+            </div>
+
+            <!-- Store info -->
+            <div class="panel-box settings-view" data-view="info" hidden>
+                <div class="box-head"><span>Store info window</span></div>
+                <div class="form-grid">
+                    <div class="field">
+                        <label for="s-i-title">Window title</label>
+                        <input type="text" id="s-i-title" class="cs-input" maxlength="40" data-path="info.windowTitle">
+                    </div>
+                </div>
+                <div class="sub-head">
+                    <span>Tabs <span class="hint">(left to right)</span></span>
+                    <button type="button" class="cs-btn" id="add-info-tab">+ Add tab</button>
+                </div>
+                <div class="list-editor" id="info-editor"></div>
+                <p class="hint token-hint">Tip: type <b>{free_shipping_min}</b> or <b>{flat_rate}</b> in any text and it fills in your current shipping numbers.</p>
+            </div>
+
+            <!-- Checkout & promos -->
+            <div class="panel-box settings-view" data-view="checkout" hidden>
+                <div class="box-head"><span>Checkout &amp; promos</span></div>
+                <div class="form-grid">
+                    <div class="field">
+                        <label for="s-c-flat">Flat shipping rate</label>
+                        <input type="number" id="s-c-flat" class="cs-input" min="0" step="0.01" data-path="commerce.flatRate" data-kind="number">
+                    </div>
+                    <div class="field">
+                        <label for="s-c-free">Free shipping on orders over</label>
+                        <input type="number" id="s-c-free" class="cs-input" min="0" step="0.01" data-path="commerce.freeOver" data-kind="number">
+                    </div>
+                    <div class="field">
+                        <label for="s-c-currency">Currency</label>
+                        <select id="s-c-currency" class="cs-select" data-path="commerce.currency">
+                            <option>USD</option><option>CAD</option><option>EUR</option><option>GBP</option><option>AUD</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="s-c-shopify">Shopify domain <span class="hint">(turns on checkout)</span></label>
+                        <input type="text" id="s-c-shopify" class="cs-input" maxlength="120" placeholder="your-store.myshopify.com" data-path="commerce.shopifyDomain">
+                    </div>
+                </div>
+                <div class="sub-head">
+                    <span>Promo codes <span class="hint">(also create the same codes in Shopify)</span></span>
+                    <button type="button" class="cs-btn" id="add-promo">+ Add code</button>
+                </div>
+                <div class="list-editor" id="promo-editor"></div>
+                <p class="hint token-hint">Promo codes are checked on the server, so shoppers can't see the list.</p>
+            </div>
+
+            <div class="save-bar">
+                <p class="status-msg" id="settings-status"></p>
+                <span class="dirty-flag" id="settings-dirty" hidden>Unsaved changes</span>
+                <button type="button" class="cs-btn" id="settings-revert">Undo changes</button>
+                <button type="submit" class="cs-btn primary" id="settings-save">Save</button>
+            </div>
+        </form>
     </section>
+
 
     <!-- Confirm dialog -->
     <dialog class="cs-dialog confirm-dialog" id="confirm-dialog">
@@ -155,5 +298,6 @@
     </dialog>
 
     <script src="/admin/admin.js"></script>
+    <script src="/admin/settings.js"></script>
 </body>
 </html>
