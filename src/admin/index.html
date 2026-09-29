@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Product Admin</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/ekmas/cs16.css@main/css/cs16.min.css">
+    <link rel="stylesheet" href="/admin/admin.css">
+</head>
+<body>
+
+    <!-- LOGIN -->
+    <section id="login-view" class="login-view" hidden>
+        <form class="cs-dialog login-box" id="login-form" open>
+            <div class="heading">
+                <div class="wrapper">
+                    <div class="icon"></div>
+                    <p class="text">Admin Login</p>
+                </div>
+            </div>
+            <div class="content">
+                <label for="password">Password</label>
+                <input type="password" id="password" class="cs-input" autocomplete="current-password" required>
+                <p class="error-msg" id="login-error"></p>
+            </div>
+            <menu class="footer-btns">
+                <button type="submit" class="cs-btn">Log in</button>
+            </menu>
+        </form>
+    </section>
+
+    <!-- ADMIN -->
+    <section id="admin-view" class="admin-view" hidden>
+        <header class="topbar">
+            <p class="title">Product Admin</p>
+            <div class="topbar-actions">
+                <a class="cs-btn" href="/" target="_blank" rel="noopener">View store</a>
+                <button type="button" class="cs-btn" id="logout-btn">Log out</button>
+            </div>
+        </header>
+
+        <main class="layout">
+            <!-- Product list -->
+            <div class="panel-box list-box">
+                <div class="box-head">
+                    <span>Products (<span id="product-count">0</span>)</span>
+                    <button type="button" class="cs-btn" id="new-btn">+ New</button>
+                </div>
+                <div class="product-table">
+                    <div class="table-head">
+                        <div class="c-name cs-btn">Item</div>
+                        <div class="c-price cs-btn">Price</div>
+                        <div class="c-status cs-btn">Status</div>
+                        <div class="c-move cs-btn">Order</div>
+                    </div>
+                    <div id="product-rows"></div>
+                </div>
+            </div>
+
+            <!-- Editor -->
+            <form class="panel-box edit-box" id="edit-form" novalidate>
+                <div class="box-head">
+                    <span id="edit-title">New product</span>
+                    <span class="dirty-flag" id="dirty-flag" hidden>Unsaved changes</span>
+                </div>
+
+                <div class="form-grid">
+                    <div class="field wide">
+                        <label for="f-name">Name</label>
+                        <input type="text" id="f-name" class="cs-input" maxlength="120" required>
+                    </div>
+
+                    <div class="field">
+                        <label for="f-category">Category</label>
+                        <input type="text" id="f-category" class="cs-input" list="category-list" maxlength="40" placeholder="Apparel">
+                        <datalist id="category-list"></datalist>
+                    </div>
+
+                    <div class="field">
+                        <label for="f-price">Price ($)</label>
+                        <input type="number" id="f-price" class="cs-input" min="0" step="0.01" required>
+                    </div>
+
+                    <div class="field wide">
+                        <label for="f-description">Description</label>
+                        <textarea id="f-description" class="cs-input" rows="3" maxlength="1000"></textarea>
+                    </div>
+
+                    <div class="field wide">
+                        <label>Image</label>
+                        <div class="image-row">
+                            <div class="image-preview" id="image-preview"><span>No image</span></div>
+                            <div class="image-controls">
+                                <input type="file" id="f-file" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
+                                <button type="button" class="cs-btn" id="upload-btn">Upload image</button>
+                                <p class="hint">PNG, JPG, WEBP or GIF. Big photos are shrunk automatically. Square works best.</p>
+                                <label for="f-image" class="small-label">Or image path / link</label>
+                                <input type="text" id="f-image" class="cs-input" maxlength="300" placeholder="/uploads/... or https://...">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="field wide">
+                        <label for="f-sizes">Sizes <span class="hint">(comma separated, leave empty for one size)</span></label>
+                        <input type="text" id="f-sizes" class="cs-input" placeholder="S, M, L, XL, 2XL">
+                        <div class="quick-sizes">
+                            <button type="button" class="cs-btn" data-sizes="S, M, L, XL, 2XL">Shirt sizes</button>
+                            <button type="button" class="cs-btn" data-sizes="">One size</button>
+                        </div>
+                    </div>
+
+                    <div class="field wide">
+                        <label>Shopify variant IDs <span class="hint">(needed for checkout)</span></label>
+                        <div class="variant-grid" id="variant-grid"></div>
+                    </div>
+
+                    <div class="field wide checks">
+                        <div class="cs-checkbox">
+                            <input id="f-soldout" type="checkbox">
+                            <label class="cs-checkbox__label" for="f-soldout">Sold out</label>
+                        </div>
+                        <div class="cs-checkbox">
+                            <input id="f-hidden" type="checkbox">
+                            <label class="cs-checkbox__label" for="f-hidden">Hidden from store</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="edit-actions">
+                    <p class="status-msg" id="status-msg"></p>
+                    <button type="button" class="cs-btn danger" id="delete-btn">Delete</button>
+                    <button type="button" class="cs-btn" id="duplicate-btn">Duplicate</button>
+                    <button type="submit" class="cs-btn primary" id="save-btn">Save</button>
+                </div>
+            </form>
+        </main>
+    </section>
+
+    <!-- Confirm dialog -->
+    <dialog class="cs-dialog confirm-dialog" id="confirm-dialog">
+        <form method="dialog">
+            <div class="heading">
+                <div class="wrapper">
+                    <div class="icon"></div>
+                    <p class="text">Confirm</p>
+                </div>
+            </div>
+            <div class="content" id="confirm-text"></div>
+            <menu class="footer-btns">
+                <button value="yes" class="cs-btn">Yes</button>
+                <button value="no" class="cs-btn">No</button>
+            </menu>
+        </form>
+    </dialog>
+
+    <script src="/admin/admin.js"></script>
+</body>
+</html>

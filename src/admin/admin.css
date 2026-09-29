@@ -1,0 +1,393 @@
+body {
+    margin: 0;
+    min-height: 100vh;
+    background: #2b3326;
+    color: var(--text);
+    font-size: 18px;
+}
+
+[hidden] {
+    display: none !important;
+}
+
+.hint {
+    color: var(--border-light);
+    font-size: 15px;
+}
+
+.error-msg,
+.status-msg {
+    margin: 0;
+    font-size: 16px;
+    min-height: 20px;
+}
+
+.error-msg,
+.status-msg.error {
+    color: #e0685f;
+}
+
+.status-msg.ok {
+    color: var(--accent);
+}
+
+/* ---------- Login ---------- */
+
+.login-view {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    box-sizing: border-box;
+}
+
+.login-box.cs-dialog {
+    position: static;
+    display: block;
+    width: 340px;
+    max-width: 100%;
+    margin: 0;
+}
+
+.login-box .content {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* ---------- Top bar ---------- */
+
+.topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 16px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border-dark);
+}
+
+.topbar .title {
+    margin: 0;
+    font-size: 22px;
+    color: var(--accent);
+}
+
+.topbar-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.topbar-actions .cs-btn {
+    text-decoration: none;
+    font-size: 17px;
+}
+
+/* ---------- Layout ---------- */
+
+.layout {
+    display: grid;
+    grid-template-columns: minmax(320px, 1fr) minmax(380px, 1.2fr);
+    gap: 16px;
+    padding: 16px;
+    max-width: 1300px;
+    margin: 0 auto;
+    align-items: start;
+}
+
+.panel-box {
+    background: var(--bg);
+    border: 1px solid;
+    border-color: var(--border-light) var(--border-dark) var(--border-dark) var(--border-light);
+    padding: 12px;
+    min-width: 0;
+}
+
+.box-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    font-size: 20px;
+    color: var(--accent);
+}
+
+.box-head .cs-btn {
+    font-size: 17px;
+}
+
+.dirty-flag {
+    font-size: 15px;
+    color: #e8b04a;
+}
+
+/* ---------- Product list ---------- */
+
+.product-table {
+    background: var(--secondary-bg);
+    border-bottom: 1px solid var(--border-light);
+    max-height: calc(100vh - 160px);
+    overflow-y: auto;
+}
+
+.table-head {
+    display: flex;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.table-head .cs-btn {
+    font-size: 16px;
+}
+
+.row {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-size: 17px;
+}
+
+.row:hover {
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.row.selected {
+    background: var(--secondary-accent);
+}
+
+.row > div {
+    padding: 5px 6px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.c-name   { flex: 1; min-width: 0; }
+.c-price  { flex: 0 0 76px; }
+.c-status { flex: 0 0 82px; }
+.c-move   { flex: 0 0 64px; }
+
+.row .c-price { text-align: right; }
+
+.row .c-move {
+    display: flex;
+    gap: 4px;
+    padding: 2px 4px;
+}
+
+.row .c-move .cs-btn {
+    font-size: 13px;
+    padding: 0 6px;
+    min-width: 0;
+    line-height: 18px;
+}
+
+.tag {
+    font-size: 14px;
+}
+
+.tag.live   { color: #9fce6a; }
+.tag.hidden { color: var(--border-light); }
+.tag.sold   { color: #e8b04a; }
+
+.empty {
+    padding: 12px 8px;
+    color: var(--secondary-text);
+    font-size: 16px;
+}
+
+/* ---------- Editor ---------- */
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 16px;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.field.wide {
+    grid-column: 1 / -1;
+}
+
+.field .cs-input {
+    width: 100%;
+    box-sizing: border-box;
+    font-size: 17px;
+}
+
+textarea.cs-input {
+    resize: vertical;
+    font-family: inherit;
+    line-height: 1.2;
+    min-height: 64px;
+}
+
+.small-label {
+    font-size: 15px;
+    margin-top: 6px;
+}
+
+.image-row {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+}
+
+.image-preview {
+    flex: 0 0 130px;
+    height: 130px;
+    background: var(--secondary-bg) center / contain no-repeat;
+    border: 1px solid;
+    border-color: var(--border-dark) var(--border-light) var(--border-light) var(--border-dark);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--border-light);
+    font-size: 15px;
+}
+
+.image-preview.has-image span {
+    display: none;
+}
+
+.image-controls {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.image-controls .cs-btn {
+    align-self: flex-start;
+    font-size: 17px;
+}
+
+.image-controls .hint {
+    margin: 0;
+}
+
+.quick-sizes {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.quick-sizes .cs-btn {
+    font-size: 15px;
+}
+
+.variant-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 8px;
+}
+
+.variant-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.variant-item span {
+    flex: 0 0 auto;
+    min-width: 34px;
+    font-size: 16px;
+}
+
+.variant-item .cs-input {
+    flex: 1;
+    min-width: 0;
+    font-size: 16px;
+}
+
+.checks {
+    flex-direction: row;
+    gap: 24px;
+    flex-wrap: wrap;
+}
+
+.edit-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-dark);
+}
+
+.edit-actions .status-msg {
+    flex: 1;
+}
+
+.edit-actions .cs-btn {
+    font-size: 17px;
+    min-width: 80px;
+}
+
+.cs-btn.primary {
+    color: var(--accent);
+}
+
+.cs-btn.danger {
+    color: #e0685f;
+}
+
+.confirm-dialog.cs-dialog {
+    font-size: 18px;
+    max-width: 400px;
+}
+
+/* ---------- Phone / small screens ---------- */
+
+@media (max-width: 860px) {
+    .layout {
+        grid-template-columns: 1fr;
+        padding: 12px 16px;
+    }
+
+    .product-table {
+        max-height: 300px;
+    }
+}
+
+@media (max-width: 520px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .image-row {
+        flex-direction: column;
+    }
+
+    .image-preview {
+        flex-basis: auto;
+        width: 130px;
+    }
+
+    .c-status { flex-basis: 64px; }
+
+    .edit-actions {
+        flex-wrap: wrap;
+    }
+
+    .edit-actions .status-msg {
+        flex-basis: 100%;
+    }
+
+    .topbar .title {
+        font-size: 18px;
+    }
+}
+
+.row.selected .tag {
+    color: #fff;
+}

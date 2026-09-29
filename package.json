@@ -1,0 +1,16 @@
+{
+  "name": "cs-merch-store",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "CS-style merch store with a product admin page, for Netlify",
+  "scripts": {
+    "dev": "netlify dev"
+  },
+  "dependencies": {
+    "@netlify/blobs": "^8.1.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

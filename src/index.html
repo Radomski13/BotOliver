@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frag Supply Co. | Counter-Strike Inspired Merch</title>
+    <meta name="description" content="Tees, hoodies, caps, desk mats and stickers for CS players. Built for the grind, made for the clutch.">
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/gh/ekmas/cs16.css@main/css/cs16.min.css">
+    <link rel="stylesheet" type="text/css" href="styles.css">
+    <link rel="preload" href="images/background.png" as="image" fetchpriority="high">
+    <link rel="preload" href="sounds/menu_click.wav" as="audio" type="audio/wav">
+    <link rel="preload" href="sounds/window_close.wav" as="audio" type="audio/wav">
+</head>
+<body>
+    <div class="container">
+        <div class="menu">
+            <div class="store-logo">
+                <span class="store-name" data-store-name>Frag Supply Co.</span>
+                <span class="store-tagline" data-store-tagline>Merch for the clutch</span>
+            </div>
+            <a class="menu-item" data-section="buy">Buy menu</a>
+            <a class="menu-item" data-section="cart">Cart <span class="cart-count">(0)</span></a>
+            <a class="menu-item" data-section="discount" id="discount-menu-item" hidden>Win a discount</a>
+            <a class="menu-item" data-section="info">Store info</a>
+            <a class="menu-item" data-section="welcome">Welcome</a>
+        </div>
+    </div>
+
+    <p class="site-footer">
+        Not affiliated with or endorsed by Valve Corporation. Counter-Strike is a trademark of Valve Corporation.
+    </p>
+
+    <!-- WELCOME -->
+    <dialog class="cs-dialog welcome-dialog" id="welcome-dialog">
+        <form method="dialog">
+            <div class="heading">
+                <div class="wrapper">
+                    <div class="icon"></div>
+                    <p class="text">Join Server</p>
+                </div>
+                <button class="cs-btn close" type="button"></button>
+            </div>
+            <div class="content">
+                <div class="cs-tabs">
+                    <input class="radiotab" name="welcome-tabs" type="radio" id="welcome-tab" checked />
+                    <label class="label" for="welcome-tab">Server</label>
+                    <div class="panel">
+                        <div class="map-selector">
+                            <label>Map</label>
+                            <select class="cs-select">
+                                <option selected>de_merch</option>
+                            </select>
+                        </div>
+                        <hr class="cs-hr" />
+                        <div class="description">
+                            <p class="welcome-headline">Welcome to <span data-store-name>Frag Supply Co.</span></p>
+                            <p>
+                                Gear for people who have played "one more game" at 3 AM.
+                                Tees, hoodies, caps, desk mats and stickers, designed by players, for players.
+                            </p>
+                            <ul class="perks">
+                                <li>Free shipping on orders over <span data-free-ship>$75</span></li>
+                                <li>Printed to order, ships in 3–5 business days</li>
+                                <li>Easy 30-day returns</li>
+                            </ul>
+                            <p class="hint">Hit <b>Start</b> to open the buy menu.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <menu class="footer-btns">
+                <button type="button" class="cs-btn" id="welcome-start">Start</button>
+                <button type="button" class="cs-btn" id="welcome-cancel">Cancel</button>
+            </menu>
+        </form>
+    </dialog>
+
+    <!-- BUY MENU -->
+    <dialog class="cs-dialog buy-dialog" id="buy-dialog">
+        <form method="dialog">
+            <div class="heading">
+                <div class="wrapper">
+                    <div class="icon"></div>
+                    <p class="text">Buy Menu</p>
+                </div>
+                <button class="cs-btn close" type="button"></button>
+            </div>
+            <div class="content">
+                <div class="cs-tabs">
+                    <input class="radiotab" name="buy-tabs" type="radio" id="buy-tab" checked />
+                    <label class="label" for="buy-tab">Shop</label>
+                    <div class="panel">
+                        <div class="buy-layout">
+                            <div class="buy-left">
+                                <div class="category-row">
+                                    <label for="category-filter">Category</label>
+                                    <select id="category-filter" class="cs-select"></select>
+                                </div>
+                                <div class="product-browser">
+                                    <div class="product-list-header">
+                                        <div class="col-name cs-btn">Item</div>
+                                        <div class="col-cat cs-btn">Type</div>
+                                        <div class="col-price cs-btn">Price</div>
+                                    </div>
+                                    <div class="product-list" id="product-list"></div>
+                                </div>
+                            </div>
+                            <div class="buy-right">
+                                <div class="product-preview-image" id="preview-image"></div>
+                                <p class="preview-name" id="preview-name">Select an item</p>
+                                <p class="preview-price" id="preview-price"></p>
+                                <p class="preview-desc" id="preview-desc">Pick something from the list to see details.</p>
+                                <div class="preview-options">
+                                    <div class="option-row" id="size-row">
+                                        <label for="size-select">Size</label>
+                                        <select id="size-select" class="cs-select"></select>
+                                    </div>
+                                    <div class="option-row">
+                                        <label for="qty-input">Qty</label>
+                                        <input type="number" id="qty-input" class="cs-input qty-input" min="1" max="20" value="1">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="dialog-actions">
+                            <span class="action-msg" id="buy-msg"></span>
+                            <button type="button" class="cs-btn" id="view-cart-btn">Cart (0)</button>
+                            <button type="button" class="cs-btn" id="add-to-cart-btn" disabled>Buy</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </dialog>
+
+    <!-- CART -->
+    <dialog class="cs-dialog cart-dialog" id="cart-dialog">
+        <form method="dialog">
+            <div class="heading">
+                <div class="wrapper">
+                    <div class="icon"></div>
+                    <p class="text">Cart</p>
+                </div>
+                <button class="cs-btn close" type="button"></button>
+            </div>
+            <div class="content">
+                <div class="cs-tabs">
+                    <input class="radiotab" name="cart-tabs" type="radio" id="cart-tab" checked />
+                    <label class="label" for="cart-tab">Loadout</label>
+                    <div class="panel">
+                        <div class="cart-browser">
+                            <div class="cart-list-header">
+                                <div class="col-name cs-btn">Item</div>
+                                <div class="col-size cs-btn">Size</div>
+                                <div class="col-qty cs-btn">Qty</div>
+                                <div class="col-price cs-btn">Total</div>
+                                <div class="col-remove cs-btn">&nbsp;</div>
+                            </div>
+                            <div class="cart-list" id="cart-list"></div>
+                        </div>
+                        <div class="cart-bottom">
+                            <div class="promo-section">
+                                <label for="promo-input">Promo code</label>
+                                <div class="promo-row">
+                                    <input type="text" id="promo-input" class="cs-input" placeholder="HEADSHOT10" autocomplete="off">
+                                    <button type="button" class="cs-btn" id="promo-apply">Apply</button>
+                                </div>
+                                <p class="promo-msg" id="promo-msg"></p>
+                            </div>
+                            <div class="totals">
+                                <div class="total-row"><span>Subtotal</span><span id="subtotal">$0.00</span></div>
+                                <div class="total-row" id="discount-row" hidden><span id="discount-label">Discount</span><span id="discount-amount">-$0.00</span></div>
+                                <div class="total-row"><span>Shipping</span><span id="shipping">$0.00</span></div>
+                                <div class="total-row grand"><span>Total</span><span id="grand-total">$0.00</span></div>
+                                <div class="cs-progress-bar ship-bar"><div class="bars" id="ship-bar"></div></div>
+                                <p class="ship-note" id="ship-note"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <menu class="footer-btns">
+                <button type="button" class="cs-btn" id="checkout-btn" disabled>Checkout</button>
+                <button type="button" class="cs-btn" id="cart-keep-shopping">Shop more</button>
+                <button type="button" class="cs-btn" id="cart-clear">Clear</button>
+            </menu>
+        </form>
+    </dialog>
+
+    <!-- STORE INFO -->
+    <dialog class="cs-dialog info-dialog" id="info-dialog">
+        <form method="dialog">
+            <div class="heading">
+                <div class="wrapper">
+                    <div class="icon"></div>
+                    <p class="text">Store Info</p>
+                </div>
+                <button class="cs-btn close" type="button"></button>
+            </div>
+            <div class="content">
+                <div class="cs-tabs">
+                    <input class="radiotab" name="info-tabs" type="radio" id="info-shipping" checked />
+                    <label class="label" for="info-shipping">Shipping</label>
+                    <div class="panel">
+                        <div class="info-text">
+                            <p>Every item is printed to order. Orders ship in 3–5 business days.</p>
+                            <p>US shipping is a flat <span data-flat-ship>$5.99</span>, or free on orders over <span data-free-ship>$75</span>.</p>
+                            <p>You'll get a tracking number by email as soon as your order ships.</p>
+                        </div>
+                    </div>
+
+                    <input class="radiotab" name="info-tabs" type="radio" id="info-returns" />
+                    <label class="label" for="info-returns">Returns</label>
+                    <div class="panel">
+                        <div class="info-text">
+                            <p>Not happy? Send it back within 30 days of delivery for a refund or exchange.</p>
+                            <p>Items must be unworn and unwashed. Stickers are final sale.</p>
+                            <p>Wrong size? Exchanges are free.</p>
+                        </div>
+                    </div>
+
+                    <input class="radiotab" name="info-tabs" type="radio" id="info-sizes" />
+                    <label class="label" for="info-sizes">Sizes</label>
+                    <div class="panel">
+                        <div class="size-table">
+                            <div class="size-row head"><span>Size</span><span>Chest (in)</span><span>Length (in)</span></div>
+                            <div class="size-row"><span>S</span><span>34–36</span><span>28</span></div>
+                            <div class="size-row"><span>M</span><span>38–40</span><span>29</span></div>
+                            <div class="size-row"><span>L</span><span>42–44</span><span>30</span></div>
+                            <div class="size-row"><span>XL</span><span>46–48</span><span>31</span></div>
+                            <div class="size-row"><span>2XL</span><span>50–52</span><span>32</span></div>
+                        </div>
+                        <p class="info-small">Unisex fit. Between sizes? Size up.</p>
+                    </div>
+
+                    <input class="radiotab" name="info-tabs" type="radio" id="info-contact" />
+                    <label class="label" for="info-contact">Contact</label>
+                    <div class="panel">
+                        <div class="info-text">
+                            <div class="contact-field">
+                                <label for="contact-email">Email</label>
+                                <input type="text" id="contact-email" class="cs-input" readonly data-contact-email value="support@example.com">
+                            </div>
+                            <div class="contact-field">
+                                <label for="contact-insta">Instagram</label>
+                                <input type="text" id="contact-insta" class="cs-input" readonly data-contact-insta value="@yourstore">
+                            </div>
+                            <p class="info-small">We reply within one business day.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <menu class="footer-btns">
+                <button type="button" class="cs-btn" id="info-ok">OK</button>
+            </menu>
+        </form>
+    </dialog>
+
+    <!-- ALERT (checkout not set up, etc.) -->
+    <dialog class="cs-dialog alert-dialog" id="alert-dialog">
+        <form method="dialog">
+            <div class="heading">
+                <div class="wrapper">
+                    <div class="icon"></div>
+                    <p class="text" id="alert-title">Notice</p>
+                </div>
+            </div>
+            <div class="content" id="alert-body"></div>
+            <menu class="footer-btns">
+                <button class="cs-btn" id="alert-ok">OK</button>
+            </menu>
+        </form>
+    </dialog>
+
+    <script src="script.js"></script>
+</body>
+</html>
