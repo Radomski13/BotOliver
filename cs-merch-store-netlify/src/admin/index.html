@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Store Admin</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/ekmas/cs16.css@main/css/cs16.min.css">
+    <link rel="stylesheet" href="/admin/admin.css">
+</head>
+<body>
+
+    <!-- LOGIN -->
+    <section id="login-view" class="login-view" hidden>
+        <form class="cs-dialog login-box" id="login-form" open>
+            <div class="heading">
+                <div class="wrapper">
+                    <div class="icon"></div>
+                    <p class="text">Admin Login</p>
+                </div>
+            </div>
+            <div class="content">
+                <label for="password">Password</label>
+                <input type="password" id="password" class="cs-input" autocomplete="current-password" required>
+                <p class="error-msg" id="login-error"></p>
+            </div>
+            <menu class="footer-btns">
+                <button type="submit" class="cs-btn">Log in</button>
+            </menu>
+        </form>
+    </section>
+
+    <!-- ADMIN -->
+    <section id="admin-view" class="admin-view" hidden>
+        <header class="topbar">
+            <p class="title">Store Admin</p>
+            <div class="topbar-actions">
+                <a class="cs-btn" href="/" target="_blank" rel="noopener">View store</a>
+                <button type="button" class="cs-btn" id="logout-btn">Log out</button>
+            </div>
+        </header>
+
+        <nav class="section-nav" id="section-nav">
+            <button type="button" class="cs-btn active" data-view="products">Products</button>
+            <button type="button" class="cs-btn" data-view="home">Home page</button>
+            <button type="button" class="cs-btn" data-view="welcome">Welcome</button>
+            <button type="button" class="cs-btn" data-view="info">Store info</button>
+            <button type="button" class="cs-btn" data-view="mobilebg">Mobile background</button>
+            <button type="button" class="cs-btn" data-view="checkout">Checkout &amp; promos</button>
+        </nav>
+
+        <main class="layout" id="view-products">
+            <!-- Product list -->
+            <div class="panel-box list-box">
+                <div class="box-head">
+                    <span>Products (<span id="product-count">0</span>)</span>
+                    <button type="button" class="cs-btn" id="new-btn">+ New</button>
+                </div>
+                <div class="product-table">
+                    <div class="table-head">
+                        <div class="c-name cs-btn">Item</div>
+                        <div class="c-price cs-btn">Price</div>
+                        <div class="c-status cs-btn">Status</div>
+                        <div class="c-move cs-btn">Order</div>
+                    </div>
+                    <div id="product-rows"></div>
+                </div>
+            </div>
+
+            <!-- Editor -->
+            <form class="panel-box edit-box" id="edit-form" novalidate>
+                <div class="box-head">
+                    <span id="edit-title">New product</span>
+                    <span class="dirty-flag" id="dirty-flag" hidden>Unsaved changes</span>
+                </div>
+
+                <div class="form-grid">
+                    <div class="field wide">
+                        <label for="f-name">Name</label>
+                        <input type="text" id="f-name" class="cs-input" maxlength="120" required>
+                    </div>
+
+                    <div class="field">
+                        <label for="f-category">Category</label>
+                        <input type="text" id="f-category" class="cs-input" list="category-list" maxlength="40" placeholder="Apparel">
+                        <datalist id="category-list"></datalist>
+                    </div>
+
+                    <div class="field">
+                        <label for="f-price">Price ($)</label>
+                        <input type="number" id="f-price" class="cs-input" min="0" step="0.01" required>
+                    </div>
+
+                    <div class="field wide">
+                        <label for="f-description">Description</label>
+                        <textarea id="f-description" class="cs-input" rows="3" maxlength="1000"></textarea>
+                    </div>
+
+                    <div class="field wide">
+                        <label>Image</label>
+                        <div class="image-row">
+                            <div class="image-preview" id="image-preview"><span>No image</span></div>
+                            <div class="image-controls">
+                                <input type="file" id="f-file" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
+                                <button type="button" class="cs-btn" id="upload-btn">Upload image</button>
+                                <p class="hint">PNG, JPG, WEBP or GIF. Big photos are shrunk automatically. Square works best.</p>
+                                <label for="f-image" class="small-label">Or image path / link</label>
+                                <input type="text" id="f-image" class="cs-input" maxlength="300" placeholder="/uploads/... or https://...">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="field wide">
+                        <label for="f-sizes">Sizes <span class="hint">(comma separated, leave empty for one size)</span></label>
+                        <input type="text" id="f-sizes" class="cs-input" placeholder="S, M, L, XL, 2XL">
+                        <div class="quick-sizes">
+                            <button type="button" class="cs-btn" data-sizes="S, M, L, XL, 2XL">Shirt sizes</button>
+                            <button type="button" class="cs-btn" data-sizes="">One size</button>
+                        </div>
+                    </div>
+
+                    <div class="field wide">
+                        <label>Shopify variant IDs <span class="hint">(needed for checkout)</span></label>
+                        <div class="variant-grid" id="variant-grid"></div>
+                    </div>
+
+                    <div class="field wide checks">
+                        <div class="cs-checkbox">
+                            <input id="f-soldout" type="checkbox">
+                            <label class="cs-checkbox__label" for="f-soldout">Sold out</label>
+                        </div>
+                        <div class="cs-checkbox">
+                            <input id="f-hidden" type="checkbox">
+                            <label class="cs-checkbox__label" for="f-hidden">Hidden from store</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="edit-actions">
+                    <p class="status-msg" id="status-msg"></p>
+                    <button type="button" class="cs-btn danger" id="delete-btn">Delete</button>
+                    <button type="button" class="cs-btn" id="duplicate-btn">Duplicate</button>
+                    <button type="submit" class="cs-btn primary" id="save-btn">Save</button>
+                </div>
+            </form>
+        </main>
+
+        <!-- SITE CONTENT (settings) -->
+        <form class="settings-wrap" id="settings-form" novalidate hidden>
+
+            <!-- Home page -->
+            <div class="panel-box settings-view" data-view="home" hidden>
+                <div class="box-head"><span>Home page</span></div>
+                <div class="form-grid">
+                    <div class="field">
+                        <label for="s-name">Store name <span class="hint">(big title on the home page)</span></label>
+                        <input type="text" id="s-name" class="cs-input" maxlength="60" data-path="site.name">
+                    </div>
+                    <div class="field">
+                        <label for="s-tagline">Tagline <span class="hint">(under the name)</span></label>
+                        <input type="text" id="s-tagline" class="cs-input" maxlength="120" data-path="site.tagline">
+                    </div>
+                    <div class="field wide">
+                        <label for="s-title">Browser tab title <span class="hint">(also shows in Google)</span></label>
+                        <input type="text" id="s-title" class="cs-input" maxlength="120" data-path="site.pageTitle">
+                    </div>
+                    <div class="field wide">
+                        <label for="s-meta">Search description <span class="hint">(the snippet under your link in Google)</span></label>
+                        <textarea id="s-meta" class="cs-input" rows="2" maxlength="300" data-path="site.metaDescription"></textarea>
+                    </div>
+                    <div class="field wide">
+                        <label for="s-footer">Footer text <span class="hint">(small print, bottom right)</span></label>
+                        <textarea id="s-footer" class="cs-input" rows="2" maxlength="300" data-path="site.footer"></textarea>
+                    </div>
+                </div>
+
+                <div class="sub-head">
+                    <span>Menu <span class="hint">(top to bottom, as shown on the home page)</span></span>
+                    <button type="button" class="cs-btn" id="add-menu-link">+ Add link</button>
+                </div>
+                <div class="list-editor" id="menu-editor"></div>
+            </div>
+
+            <!-- Welcome -->
+            <div class="panel-box settings-view" data-view="welcome" hidden>
+                <div class="box-head"><span>Welcome window</span></div>
+                <div class="form-grid">
+                    <div class="field wide checks">
+                        <div class="cs-checkbox">
+                            <input id="s-w-show" type="checkbox" data-path="welcome.showOnFirstVisit">
+                            <label class="cs-checkbox__label" for="s-w-show">Pop up automatically on a visitor's first page view</label>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label for="s-w-title">Window title</label>
+                        <input type="text" id="s-w-title" class="cs-input" maxlength="40" data-path="welcome.windowTitle">
+                    </div>
+                    <div class="field">
+                        <label for="s-w-map">Map name <span class="hint">(leave empty to hide)</span></label>
+                        <input type="text" id="s-w-map" class="cs-input" maxlength="40" data-path="welcome.mapName">
+                    </div>
+                    <div class="field wide">
+                        <label for="s-w-headline">Headline</label>
+                        <input type="text" id="s-w-headline" class="cs-input" maxlength="120" data-path="welcome.headline">
+                    </div>
+                    <div class="field wide">
+                        <label for="s-w-body">Main text <span class="hint">(blank line = new paragraph; links and emails become clickable)</span></label>
+                        <textarea id="s-w-body" class="cs-input" rows="4" maxlength="2000" data-path="welcome.body"></textarea>
+                    </div>
+                    <div class="field wide">
+                        <label for="s-w-perks">Bullet points <span class="hint">(one per line)</span></label>
+                        <textarea id="s-w-perks" class="cs-input" rows="4" data-path="welcome.perks" data-kind="lines"></textarea>
+                    </div>
+                    <div class="field">
+                        <label for="s-w-hint">Small hint line</label>
+                        <input type="text" id="s-w-hint" class="cs-input" maxlength="200" data-path="welcome.hint">
+                    </div>
+                    <div class="field">
+                        <label for="s-w-start">Start button text <span class="hint">(opens the buy menu)</span></label>
+                        <input type="text" id="s-w-start" class="cs-input" maxlength="20" data-path="welcome.startLabel">
+                    </div>
+                </div>
+                <p class="hint token-hint">Tip: type <b>{free_shipping_min}</b> or <b>{flat_rate}</b> in any text and it fills in your current shipping numbers.</p>
+            </div>
+
+            <!-- Store info -->
+            <div class="panel-box settings-view" data-view="info" hidden>
+                <div class="box-head"><span>Store info window</span></div>
+                <div class="form-grid">
+                    <div class="field">
+                        <label for="s-i-title">Window title</label>
+                        <input type="text" id="s-i-title" class="cs-input" maxlength="40" data-path="info.windowTitle">
+                    </div>
+                </div>
+                <div class="sub-head">
+                    <span>Tabs <span class="hint">(left to right)</span></span>
+                    <button type="button" class="cs-btn" id="add-info-tab">+ Add tab</button>
+                </div>
+                <div class="list-editor" id="info-editor"></div>
+                <p class="hint token-hint">Tip: type <b>{free_shipping_min}</b> or <b>{flat_rate}</b> in any text and it fills in your current shipping numbers.</p>
+            </div>
+
+            <!-- Mobile background -->
+            <div class="panel-box settings-view" data-view="mobilebg" hidden>
+                <div class="box-head">
+                    <span>Mobile background <span class="hint">(phones only — desktop is not affected)</span></span>
+                    <button type="button" class="cs-btn" id="mbg-reset">Reset to original</button>
+                </div>
+                <div class="mbg-layout">
+                    <div class="mbg-controls">
+                        <div class="field">
+                            <label for="s-mbg-zoom">Size / zoom <b class="range-val" data-for="s-mbg-zoom"></b></label>
+                            <input type="range" id="s-mbg-zoom" min="25" max="300" step="5" data-path="appearance.mobileBg.zoom" data-kind="number">
+                            <p class="hint">100% fills the screen. Lower zooms out (shows more picture, leaves empty space). Higher zooms in.</p>
+                        </div>
+                        <div class="field">
+                            <label for="s-mbg-x">Left / right <b class="range-val" data-for="s-mbg-x"></b></label>
+                            <input type="range" id="s-mbg-x" min="0" max="100" step="1" data-path="appearance.mobileBg.posX" data-kind="number">
+                            <p class="hint">0% = left edge of the picture, 100% = right edge.</p>
+                        </div>
+                        <div class="field">
+                            <label for="s-mbg-y">Up / down <b class="range-val" data-for="s-mbg-y"></b></label>
+                            <input type="range" id="s-mbg-y" min="0" max="100" step="1" data-path="appearance.mobileBg.posY" data-kind="number">
+                            <p class="hint">0% = top, 100% = bottom. Matters most when zoomed out or in.</p>
+                        </div>
+                        <div class="field">
+                            <label for="s-mbg-dark">Darken <b class="range-val" data-for="s-mbg-dark"></b></label>
+                            <input type="range" id="s-mbg-dark" min="0" max="80" step="5" data-path="appearance.mobileBg.darken" data-kind="number">
+                            <p class="hint">Dims the picture so the menu links stand out more. 0% = no change.</p>
+                        </div>
+                        <div class="field">
+                            <label for="s-mbg-color">Empty space color</label>
+                            <div class="color-row">
+                                <input type="color" id="s-mbg-color" data-path="appearance.mobileBg.color">
+                                <span class="hint">Shows only where the picture doesn't reach (when zoomed out).</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mbg-preview-wrap">
+                        <div class="phone-frame">
+                            <div class="phone-screen" id="mbg-preview">
+                                <div class="pv-menu" id="mbg-preview-menu"></div>
+                            </div>
+                        </div>
+                        <p class="hint center">Preview (phone, 390 × 844)</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Checkout & promos -->
+            <div class="panel-box settings-view" data-view="checkout" hidden>
+                <div class="box-head"><span>Checkout &amp; promos</span></div>
+                <div class="form-grid">
+                    <div class="field">
+                        <label for="s-c-flat">Flat shipping rate</label>
+                        <input type="number" id="s-c-flat" class="cs-input" min="0" step="0.01" data-path="commerce.flatRate" data-kind="number">
+                    </div>
+                    <div class="field">
+                        <label for="s-c-free">Free shipping on orders over</label>
+                        <input type="number" id="s-c-free" class="cs-input" min="0" step="0.01" data-path="commerce.freeOver" data-kind="number">
+                    </div>
+                    <div class="field">
+                        <label for="s-c-currency">Currency</label>
+                        <select id="s-c-currency" class="cs-select" data-path="commerce.currency">
+                            <option>USD</option><option>CAD</option><option>EUR</option><option>GBP</option><option>AUD</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="s-c-shopify">Shopify domain <span class="hint">(turns on checkout)</span></label>
+                        <input type="text" id="s-c-shopify" class="cs-input" maxlength="120" placeholder="your-store.myshopify.com" data-path="commerce.shopifyDomain">
+                    </div>
+                </div>
+                <div class="sub-head">
+                    <span>Promo codes <span class="hint">(also create the same codes in Shopify)</span></span>
+                    <button type="button" class="cs-btn" id="add-promo">+ Add code</button>
+                </div>
+                <div class="list-editor" id="promo-editor"></div>
+                <p class="hint token-hint">Promo codes are checked on the server, so shoppers can't see the list.</p>
+            </div>
+
+            <div class="save-bar">
+                <p class="status-msg" id="settings-status"></p>
+                <span class="dirty-flag" id="settings-dirty" hidden>Unsaved changes</span>
+                <button type="button" class="cs-btn" id="settings-revert">Undo changes</button>
+                <button type="submit" class="cs-btn primary" id="settings-save">Save</button>
+            </div>
+        </form>
+    </section>
+
+
+    <!-- Confirm dialog -->
+    <dialog class="cs-dialog confirm-dialog" id="confirm-dialog">
+        <form method="dialog">
+            <div class="heading">
+                <div class="wrapper">
+                    <div class="icon"></div>
+                    <p class="text">Confirm</p>
+                </div>
+            </div>
+            <div class="content" id="confirm-text"></div>
+            <menu class="footer-btns">
+                <button value="yes" class="cs-btn">Yes</button>
+                <button value="no" class="cs-btn">No</button>
+            </menu>
+        </form>
+    </dialog>
+
+    <script src="/admin/admin.js"></script>
+    <script src="/admin/settings.js"></script>
+</body>
+</html>
