@@ -166,6 +166,23 @@ function renderSite() {
     });
 }
 
+// Phone background: zoom 100 = fill the screen, lower = zoomed out, higher = zoomed in.
+const BG_IMAGE = new Image();
+BG_IMAGE.src = 'images/background.png';
+
+function applyMobileBackground() {
+    const m = (SETTINGS.appearance && SETTINGS.appearance.mobileBg) || {};
+    const iw = BG_IMAGE.naturalWidth, ih = BG_IMAGE.naturalHeight;
+    if (!iw || !ih) return;
+    const vw = document.body.clientWidth, vh = document.body.clientHeight;
+    const scale = Math.max(vw / iw, vh / ih) * ((m.zoom ?? 100) / 100);
+    const style = document.body.style;
+    style.setProperty('--m-bg-size', (m.zoom ?? 100) === 100 ? 'cover' : `${Math.round(iw * scale)}px ${Math.round(ih * scale)}px`);
+    style.setProperty('--m-bg-pos', `${m.posX ?? 50}% ${m.posY ?? 50}%`);
+    style.setProperty('--m-bg-color', m.color || '#0d1420');
+    style.setProperty('--m-bg-dim', String((m.darken ?? 0) / 100));
+}
+
 function renderWelcome() {
     const w = SETTINGS.welcome;
     document.getElementById('welcome-title').textContent = w.windowTitle;
@@ -285,6 +302,9 @@ function initBuyDialog() {
         previewName.textContent = selected.name;
         previewPrice.textContent = selected.soldOut ? 'Sold out' : money(selected.price);
         previewDesc.textContent = selected.description;
+        const pageLink = dialog.querySelector('#preview-link');
+        pageLink.href = `/product/${encodeURIComponent(selected.id)}`;
+        pageLink.hidden = false;
 
         if (selected.sizes.length) {
             sizeRow.hidden = false;
@@ -305,6 +325,9 @@ function initBuyDialog() {
         const size = selected.sizes.length ? sizeSelect.value : 'default';
         cart.add(selected.id, size, qty);
         play('buy');
+        if (window.StoreTracking) {
+            StoreTracking.addToCart([{ id: StoreTracking.variantId(selected.id, size), name: selected.name, price: selected.price, quantity: qty, size: size === 'default' ? '' : size }], SETTINGS.commerce.currency);
+        }
 
         msg.textContent = `Added ${qty} x ${selected.name}${size !== 'default' ? ` (${size})` : ''}`;
         clearTimeout(msgTimer);
@@ -447,6 +470,13 @@ function initCartDialog() {
             return `${p.variants[i.size]}:${i.qty}`;
         }).join(',');
 
+        if (window.StoreTracking) {
+            StoreTracking.beginCheckout(cart.items.map(i => {
+                const p = PRODUCTS.find(p => p.id === i.id);
+                return { id: StoreTracking.variantId(i.id, i.size), name: p.name, price: p.price, quantity: i.qty, size: i.size === 'default' ? '' : i.size };
+            }), SETTINGS.commerce.currency);
+        }
+
         let url = `https://${SETTINGS.commerce.shopifyDomain}/cart/${lines}`;
         if (cart.promo) url += `?discount=${encodeURIComponent(cart.promo.code)}`;
         play('go');
@@ -505,6 +535,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     renderSite();
+    if (BG_IMAGE.complete) applyMobileBackground();
+    else BG_IMAGE.addEventListener('load', applyMobileBackground);
+    window.addEventListener('resize', applyMobileBackground);
     renderWelcome();
     renderInfo();
     cart.load();
@@ -537,6 +570,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Re-render cart whenever it's opened from anywhere.
     const origShow = cartDialog.showModal.bind(cartDialog);
     cartDialog.showModal = () => { cartDialog.render(); origShow(); };
+
+    if (!loadFailed && window.StoreTracking) StoreTracking.init(SETTINGS.marketing);
+
+    // Links from product pages: /?cart=1 opens the cart, /?product=<id> opens the buy menu on that item.
+    const params = new URLSearchParams(location.search);
+    if (!loadFailed && (params.has('cart') || params.has('product'))) {
+        history.replaceState(null, '', location.pathname);
+        if (params.has('cart')) {
+            openOnly(cartDialog);
+        } else {
+            openOnly(buy);
+            const row = document.querySelector(`.product-item[data-id="${CSS.escape(params.get('product'))}"]`);
+            if (row) row.click();
+        }
+        return;
+    }
 
     if (loadFailed) {
         showAlert('Connection problem', 'The store couldn\'t load right now. Please refresh the page in a moment.');

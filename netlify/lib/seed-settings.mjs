@@ -69,6 +69,14 @@ export default {
         ],
     },
 
+    // Ad tracking. Leave empty until you have the IDs.
+    marketing: { metaPixelId: '', googleTagId: '' },
+
+    appearance: {
+        // Phone background. zoom 100 = fills the screen (original look).
+        mobileBg: { zoom: 100, posX: 50, posY: 50, darken: 0, color: '#0d1420' },
+    },
+
     commerce: {
         currency: 'USD',
         flatRate: 5.99,

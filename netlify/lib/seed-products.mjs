@@ -16,7 +16,13 @@ export default [
     ],
     "variants": {},
     "soldOut": false,
-    "hidden": false
+    "hidden": false,
+    "brand": "",
+    "color": "Black",
+    "gender": "unisex",
+    "ageGroup": "adult",
+    "googleCategory": "Apparel & Accessories > Clothing > Shirts & Tops",
+    "gtin": ""
   },
   {
     "id": "rush-b-tee",
@@ -34,7 +40,13 @@ export default [
     ],
     "variants": {},
     "soldOut": false,
-    "hidden": false
+    "hidden": false,
+    "brand": "",
+    "color": "White",
+    "gender": "unisex",
+    "ageGroup": "adult",
+    "googleCategory": "Apparel & Accessories > Clothing > Shirts & Tops",
+    "gtin": ""
   },
   {
     "id": "eco-round-hoodie",
@@ -52,7 +64,13 @@ export default [
     ],
     "variants": {},
     "soldOut": false,
-    "hidden": false
+    "hidden": false,
+    "brand": "",
+    "color": "Olive",
+    "gender": "unisex",
+    "ageGroup": "adult",
+    "googleCategory": "Apparel & Accessories > Clothing > Shirts & Tops",
+    "gtin": ""
   },
   {
     "id": "clutch-cap",
@@ -64,7 +82,13 @@ export default [
     "sizes": [],
     "variants": {},
     "soldOut": false,
-    "hidden": false
+    "hidden": false,
+    "brand": "",
+    "color": "Black",
+    "gender": "unisex",
+    "ageGroup": "adult",
+    "googleCategory": "Apparel & Accessories > Clothing Accessories > Hats",
+    "gtin": ""
   },
   {
     "id": "bombsite-mousepad",
@@ -76,7 +100,13 @@ export default [
     "sizes": [],
     "variants": {},
     "soldOut": false,
-    "hidden": false
+    "hidden": false,
+    "brand": "",
+    "color": "Black",
+    "gender": "",
+    "ageGroup": "",
+    "googleCategory": "",
+    "gtin": ""
   },
   {
     "id": "sticker-pack",
@@ -88,6 +118,12 @@ export default [
     "sizes": [],
     "variants": {},
     "soldOut": false,
-    "hidden": false
+    "hidden": false,
+    "brand": "",
+    "color": "Multicolor",
+    "gender": "",
+    "ageGroup": "",
+    "googleCategory": "",
+    "gtin": ""
   }
 ];

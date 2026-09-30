@@ -572,6 +572,14 @@ body {
 @media screen and (max-width: 700px) {
     body {
         overflow-y: auto;
+        /* Phone background — values come from the admin (Mobile background). */
+        background-color: var(--m-bg-color, #0d1420);
+        background-image:
+            linear-gradient(rgba(0, 0, 0, var(--m-bg-dim, 0)), rgba(0, 0, 0, var(--m-bg-dim, 0))),
+            url('images/background.png');
+        background-size: auto, var(--m-bg-size, cover);
+        background-position: 0 0, var(--m-bg-pos, center);
+        background-repeat: no-repeat, no-repeat;
     }
 
     .menu {
@@ -686,4 +694,11 @@ body {
 
 .info-text .size-table {
     margin-top: 4px;
+}
+
+.preview-link {
+    font-size: 16px;
+    color: var(--accent);
+    text-decoration: underline;
+    align-self: flex-start;
 }

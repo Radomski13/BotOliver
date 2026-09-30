@@ -78,12 +78,24 @@ export function cleanProduct(input) {
         if (v) variants[key] = v;
     }
 
+    // Extra details Google Merchant / Meta catalogs use.
+    const gender = ['unisex', 'male', 'female'].includes(input.gender) ? input.gender : '';
+    const ageGroup = ['adult', 'teen', 'kids', 'toddler', 'infant', 'newborn'].includes(input.ageGroup) ? input.ageGroup : '';
+    const gtin = str(input.gtin, 14);
+    if (gtin && !/^\d{8,14}$/.test(gtin)) errors.push('GTIN / barcode should be 8–14 digits (or leave it empty).');
+
     return {
         errors,
         product: {
             name, category, price, image, description, sizes, variants,
             soldOut: Boolean(input.soldOut),
             hidden: Boolean(input.hidden),
+            brand: str(input.brand, 70),
+            color: str(input.color, 40),
+            gender,
+            ageGroup,
+            googleCategory: str(input.googleCategory, 200),
+            gtin,
         },
     };
 }
@@ -95,7 +107,16 @@ const MENU_TYPES = ['buy', 'cart', 'info', 'welcome', 'link'];
 
 export async function loadSettings() {
     const saved = await dataStore().get('settings', { type: 'json' });
-    return saved && typeof saved === 'object' ? saved : structuredClone(seedSettings);
+    if (!saved || typeof saved !== 'object') return structuredClone(seedSettings);
+    // Fill in sections added after the settings were first saved.
+    const merged = { ...structuredClone(seedSettings), ...saved };
+    merged.marketing = { ...seedSettings.marketing, ...(saved.marketing || {}) };
+    merged.appearance = {
+        ...seedSettings.appearance,
+        ...(saved.appearance || {}),
+        mobileBg: { ...seedSettings.appearance.mobileBg, ...((saved.appearance || {}).mobileBg || {}) },
+    };
+    return merged;
 }
 
 export async function saveSettings(settings) {
@@ -209,9 +230,33 @@ export function cleanSettings(input) {
         promoCodes,
     };
 
+    const mb = obj(obj(input.appearance).mobileBg);
+    const range = (v, min, max, def) => {
+        const n = Math.round(Number(v));
+        return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : def;
+    };
+    const appearance = {
+        mobileBg: {
+            zoom: range(mb.zoom, 25, 300, 100),
+            posX: range(mb.posX, 0, 100, 50),
+            posY: range(mb.posY, 0, 100, 50),
+            darken: range(mb.darken, 0, 80, 0),
+            color: /^#[0-9a-f]{6}$/i.test(String(mb.color || '')) ? String(mb.color).toLowerCase() : '#0d1420',
+        },
+    };
+
+    const mk = obj(input.marketing);
+    const metaPixelId = str(mk.metaPixelId, 20).replace(/\s+/g, '');
+    if (metaPixelId && !/^\d{8,20}$/.test(metaPixelId)) errors.push('Meta Pixel ID should be numbers only (from Meta Events Manager).');
+    const googleTagId = str(mk.googleTagId, 30).replace(/\s+/g, '').toUpperCase();
+    if (googleTagId && !/^(G|AW|GT)-[A-Z0-9-]+$/.test(googleTagId)) errors.push('Google tag ID should look like G-XXXXXXX or AW-XXXXXXXXX.');
+    const marketing = { metaPixelId, googleTagId };
+
     return {
         errors,
         settings: {
+            marketing,
+            appearance,
             site: cleanSite,
             menu: dedupedMenu,
             welcome,

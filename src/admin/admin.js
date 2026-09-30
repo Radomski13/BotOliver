@@ -15,6 +15,12 @@ const form = {
     sizes: $('#f-sizes'),
     soldOut: $('#f-soldout'),
     hidden: $('#f-hidden'),
+    brand: $('#f-brand'),
+    color: $('#f-color'),
+    gender: $('#f-gender'),
+    ageGroup: $('#f-age'),
+    googleCategory: $('#f-gcat'),
+    gtin: $('#f-gtin'),
 };
 
 /* ---------- API ---------- */
@@ -171,6 +177,16 @@ function loadIntoForm(p) {
     form.sizes.value = p ? (p.sizes || []).join(', ') : 'S, M, L, XL, 2XL';
     form.soldOut.checked = p ? !!p.soldOut : false;
     form.hidden.checked = p ? !!p.hidden : false;
+    form.brand.value = p ? p.brand || '' : '';
+    form.color.value = p ? p.color || '' : '';
+    form.gender.value = p ? p.gender || '' : 'unisex';
+    form.ageGroup.value = p ? p.ageGroup || '' : 'adult';
+    form.googleCategory.value = p ? p.googleCategory || '' : '';
+    form.gtin.value = p ? p.gtin || '' : '';
+    const pageLink = $('#product-page-link');
+    pageLink.hidden = !p;
+    $('#product-page-none').hidden = !!p;
+    if (p) pageLink.href = `/product/${encodeURIComponent(p.id)}`;
 
     renderVariantInputs(p ? p.variants || {} : {});
     updatePreview();
@@ -207,6 +223,7 @@ function updatePreview() {
     const url = imageUrl(form.image.value.trim());
     box.style.backgroundImage = url ? `url("${encodeURI(url)}")` : 'none';
     box.classList.toggle('has-image', !!url);
+    $('#svg-warning').hidden = !/\.svg(\?|$)/i.test(form.image.value.trim());
 }
 
 function readForm() {
@@ -220,6 +237,12 @@ function readForm() {
         variants: currentVariantValues(),
         soldOut: form.soldOut.checked,
         hidden: form.hidden.checked,
+        brand: form.brand.value,
+        color: form.color.value,
+        gender: form.gender.value,
+        ageGroup: form.ageGroup.value,
+        googleCategory: form.googleCategory.value,
+        gtin: form.gtin.value.trim(),
     };
 }
 
@@ -275,6 +298,7 @@ async function duplicate() {
     form.image.value = p.image;
     form.sizes.value = (p.sizes || []).join(', ');
     form.hidden.checked = true;
+    ['brand', 'color', 'gender', 'ageGroup', 'googleCategory'].forEach(k => { form[k].value = p[k] || ''; });
     renderVariantInputs({});
     updatePreview();
     setDirty(true);

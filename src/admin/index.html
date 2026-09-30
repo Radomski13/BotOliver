@@ -45,7 +45,9 @@
             <button type="button" class="cs-btn" data-view="home">Home page</button>
             <button type="button" class="cs-btn" data-view="welcome">Welcome</button>
             <button type="button" class="cs-btn" data-view="info">Store info</button>
+            <button type="button" class="cs-btn" data-view="mobilebg">Mobile background</button>
             <button type="button" class="cs-btn" data-view="checkout">Checkout &amp; promos</button>
+            <button type="button" class="cs-btn" data-view="ads">Ads &amp; feeds</button>
         </nav>
 
         <main class="layout" id="view-products">
@@ -121,6 +123,64 @@
                     <div class="field wide">
                         <label>Shopify variant IDs <span class="hint">(needed for checkout)</span></label>
                         <div class="variant-grid" id="variant-grid"></div>
+                    </div>
+
+                    <div class="field wide ad-section">
+                        <p class="ad-head">Google &amp; Meta ads <span class="hint">(used on the product page and in the product feed)</span></p>
+                        <p class="warn" id="svg-warning" hidden>This image is an SVG. Google Merchant and Meta ads can't use SVG — upload a JPG, PNG or WEBP photo.</p>
+                    </div>
+
+                    <div class="field">
+                        <label for="f-brand">Brand <span class="hint">(empty = store name)</span></label>
+                        <input type="text" id="f-brand" class="cs-input" maxlength="70">
+                    </div>
+
+                    <div class="field">
+                        <label for="f-color">Color</label>
+                        <input type="text" id="f-color" class="cs-input" maxlength="40" placeholder="Black">
+                    </div>
+
+                    <div class="field">
+                        <label for="f-gender">Gender</label>
+                        <select id="f-gender" class="cs-select">
+                            <option value="">— not set —</option>
+                            <option value="unisex">Unisex</option>
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                        </select>
+                    </div>
+
+                    <div class="field">
+                        <label for="f-age">Age group</label>
+                        <select id="f-age" class="cs-select">
+                            <option value="">— not set —</option>
+                            <option value="adult">Adult</option>
+                            <option value="teen">Teen</option>
+                            <option value="kids">Kids</option>
+                            <option value="toddler">Toddler</option>
+                            <option value="infant">Infant</option>
+                            <option value="newborn">Newborn</option>
+                        </select>
+                    </div>
+
+                    <div class="field wide">
+                        <label for="f-gcat">Google product category <span class="hint">(optional — Google guesses if empty)</span></label>
+                        <input type="text" id="f-gcat" class="cs-input" maxlength="200" list="gcat-list" placeholder="Apparel & Accessories > Clothing > Shirts & Tops">
+                        <datalist id="gcat-list">
+                            <option value="Apparel & Accessories > Clothing > Shirts & Tops">
+                            <option value="Apparel & Accessories > Clothing Accessories > Hats">
+                        </datalist>
+                    </div>
+
+                    <div class="field">
+                        <label for="f-gtin">GTIN / barcode <span class="hint">(optional)</span></label>
+                        <input type="text" id="f-gtin" class="cs-input" maxlength="14" inputmode="numeric">
+                    </div>
+
+                    <div class="field">
+                        <label>Product page</label>
+                        <a class="page-link" id="product-page-link" href="#" target="_blank" rel="noopener" hidden>Open product page &raquo;</a>
+                        <span class="hint" id="product-page-none">Save the product first.</span>
                     </div>
 
                     <div class="field wide checks">
@@ -239,6 +299,53 @@
                 <p class="hint token-hint">Tip: type <b>{free_shipping_min}</b> or <b>{flat_rate}</b> in any text and it fills in your current shipping numbers.</p>
             </div>
 
+            <!-- Mobile background -->
+            <div class="panel-box settings-view" data-view="mobilebg" hidden>
+                <div class="box-head">
+                    <span>Mobile background <span class="hint">(phones only — desktop is not affected)</span></span>
+                    <button type="button" class="cs-btn" id="mbg-reset">Reset to original</button>
+                </div>
+                <div class="mbg-layout">
+                    <div class="mbg-controls">
+                        <div class="field">
+                            <label for="s-mbg-zoom">Size / zoom <b class="range-val" data-for="s-mbg-zoom"></b></label>
+                            <input type="range" id="s-mbg-zoom" min="25" max="300" step="5" data-path="appearance.mobileBg.zoom" data-kind="number">
+                            <p class="hint">100% fills the screen. Lower zooms out (shows more picture, leaves empty space). Higher zooms in.</p>
+                        </div>
+                        <div class="field">
+                            <label for="s-mbg-x">Left / right <b class="range-val" data-for="s-mbg-x"></b></label>
+                            <input type="range" id="s-mbg-x" min="0" max="100" step="1" data-path="appearance.mobileBg.posX" data-kind="number">
+                            <p class="hint">0% = left edge of the picture, 100% = right edge.</p>
+                        </div>
+                        <div class="field">
+                            <label for="s-mbg-y">Up / down <b class="range-val" data-for="s-mbg-y"></b></label>
+                            <input type="range" id="s-mbg-y" min="0" max="100" step="1" data-path="appearance.mobileBg.posY" data-kind="number">
+                            <p class="hint">0% = top, 100% = bottom. Matters most when zoomed out or in.</p>
+                        </div>
+                        <div class="field">
+                            <label for="s-mbg-dark">Darken <b class="range-val" data-for="s-mbg-dark"></b></label>
+                            <input type="range" id="s-mbg-dark" min="0" max="80" step="5" data-path="appearance.mobileBg.darken" data-kind="number">
+                            <p class="hint">Dims the picture so the menu links stand out more. 0% = no change.</p>
+                        </div>
+                        <div class="field">
+                            <label for="s-mbg-color">Empty space color</label>
+                            <div class="color-row">
+                                <input type="color" id="s-mbg-color" data-path="appearance.mobileBg.color">
+                                <span class="hint">Shows only where the picture doesn't reach (when zoomed out).</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mbg-preview-wrap">
+                        <div class="phone-frame">
+                            <div class="phone-screen" id="mbg-preview">
+                                <div class="pv-menu" id="mbg-preview-menu"></div>
+                            </div>
+                        </div>
+                        <p class="hint center">Preview (phone, 390 × 844)</p>
+                    </div>
+                </div>
+            </div>
+
             <!-- Checkout & promos -->
             <div class="panel-box settings-view" data-view="checkout" hidden>
                 <div class="box-head"><span>Checkout &amp; promos</span></div>
@@ -268,6 +375,45 @@
                 </div>
                 <div class="list-editor" id="promo-editor"></div>
                 <p class="hint token-hint">Promo codes are checked on the server, so shoppers can't see the list.</p>
+            </div>
+
+            <!-- Ads & feeds -->
+            <div class="panel-box settings-view" data-view="ads" hidden>
+                <div class="box-head"><span>Ads &amp; feeds</span></div>
+
+                <div class="sub-head first"><span>Product feed <span class="hint">(updates automatically when you edit products)</span></span></div>
+                <div class="feed-rows">
+                    <div class="feed-row">
+                        <label>Google Merchant Center &amp; Meta catalog feed</label>
+                        <div class="copy-row">
+                            <input type="text" class="cs-input" readonly data-url="/feed.xml">
+                            <button type="button" class="cs-btn copy-btn">Copy</button>
+                        </div>
+                        <p class="hint">Google Merchant: Products → Add products → Add from a file → enter a link to your file, paste this link.<br>
+                        Meta: Commerce Manager → Catalog → Data sources → Data feed → Scheduled feed, paste this link.</p>
+                    </div>
+                    <div class="feed-row">
+                        <label>Sitemap <span class="hint">(for Google Search Console)</span></label>
+                        <div class="copy-row">
+                            <input type="text" class="cs-input" readonly data-url="/sitemap.xml">
+                            <button type="button" class="cs-btn copy-btn">Copy</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sub-head"><span>Tracking <span class="hint">(leave empty to turn off)</span></span></div>
+                <div class="form-grid">
+                    <div class="field">
+                        <label for="s-m-pixel">Meta Pixel ID <span class="hint">(Events Manager → Data sources)</span></label>
+                        <input type="text" id="s-m-pixel" class="cs-input" maxlength="20" inputmode="numeric" placeholder="123456789012345" data-path="marketing.metaPixelId">
+                    </div>
+                    <div class="field">
+                        <label for="s-m-gtag">Google tag ID <span class="hint">(GA4 or Google Ads)</span></label>
+                        <input type="text" id="s-m-gtag" class="cs-input" maxlength="30" placeholder="G-XXXXXXXXXX or AW-XXXXXXXXX" data-path="marketing.googleTagId">
+                    </div>
+                </div>
+                <p class="hint token-hint">Sends: page views, product views (ViewContent / view_item), add to cart (AddToCart / add_to_cart) and checkout (InitiateCheckout / begin_checkout).
+                Product IDs match the feed, so Meta and Google can connect ads to catalog items.</p>
             </div>
 
             <div class="save-bar">

@@ -42,6 +42,18 @@ Changes are live as soon as you click Save — no redeploy needed.
 In any text you can type `{free_shipping_min}` or `{flat_rate}` and it fills in your current shipping numbers.
 Links and email addresses typed in text become clickable automatically.
 
+## Product pages, feed and ad tracking
+- Every product has its own page: `yoursite.com/product/<product-id>` (add `?size=XL` to preselect a size).
+  Pages include price/stock tags for Meta and Google, and Google's product data (schema.org).
+- **Product feed** for Google Merchant Center and Meta catalogs: `yoursite.com/feed.xml`
+  (one entry per size; updates automatically). Copy it from Admin → **Ads & feeds**.
+- **Sitemap:** `yoursite.com/sitemap.xml` (submit in Google Search Console). `robots.txt` is automatic.
+- **Tracking:** add your Meta Pixel ID and/or Google tag ID in Admin → **Ads & feeds**. Sends page views,
+  product views, add to cart and checkout, with product IDs that match the feed.
+- Google and Meta can't use SVG images — upload JPG/PNG/WEBP photos (the admin warns you).
+- For apparel, Google Merchant needs color, size, gender and age group — fill these in each product's
+  "Google & Meta ads" section.
+
 ## Where data lives
 Products and uploaded photos are stored in Netlify Blobs for your site
 (Netlify → your site → **Blobs**). They survive redeploys.
@@ -65,6 +77,9 @@ Then open http://localhost:8888 and http://localhost:8888/admin
 - `src/` — the store (and `src/admin/` for the admin page)
 - `netlify/functions/api.mjs` — products, site content, promo codes, login and upload API
 - `netlify/functions/uploads.mjs` — serves uploaded photos at `/uploads/...`
+- `netlify/functions/product.mjs` — product pages at `/product/...`
+- `netlify/functions/feed.mjs` — product feed at `/feed.xml`
+- `netlify/functions/seo.mjs` — `/sitemap.xml` and `/robots.txt`
 - `netlify/lib/` — shared code, starter products and starter site content
 - `netlify.toml` — Netlify settings
 

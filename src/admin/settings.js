@@ -76,6 +76,44 @@ function fillSettingsForm() {
     renderMenuEditor();
     renderInfoEditor();
     renderPromoEditor();
+    updateMobileBgPreview();
+}
+
+/* ---------- Mobile background preview ---------- */
+
+const MBG_DEFAULTS = { zoom: 100, posX: 50, posY: 50, darken: 0, color: '#0d1420' };
+const PREVIEW_BG = new Image();
+PREVIEW_BG.src = '/images/background.png';
+PREVIEW_BG.addEventListener('load', () => updateMobileBgPreview());
+
+function updateMobileBgPreview() {
+    if (!siteEditor.data) return;
+    const m = { ...MBG_DEFAULTS, ...((siteEditor.data.appearance || {}).mobileBg || {}) };
+
+    document.querySelectorAll('.range-val').forEach(el => {
+        const input = document.getElementById(el.dataset.for);
+        if (input) el.textContent = `${input.value}%`;
+    });
+
+    const screen = $('#mbg-preview');
+    const iw = PREVIEW_BG.naturalWidth, ih = PREVIEW_BG.naturalHeight;
+    const vw = 390, vh = 844; // preview is drawn at phone size, then scaled down
+    if (iw && ih) {
+        const scale = Math.max(vw / iw, vh / ih) * (Number(m.zoom) / 100);
+        const dim = Number(m.darken) / 100;
+        screen.style.backgroundColor = m.color;
+        screen.style.backgroundImage = `linear-gradient(rgba(0,0,0,${dim}), rgba(0,0,0,${dim})), url("/images/background.png")`;
+        screen.style.backgroundSize = `auto, ${Math.round(iw * scale)}px ${Math.round(ih * scale)}px`;
+        screen.style.backgroundPosition = `0 0, ${m.posX}% ${m.posY}%`;
+        screen.style.backgroundRepeat = 'no-repeat, no-repeat';
+    }
+
+    const d = siteEditor.data;
+    const items = (d.menu || []).filter(x => x.visible).map(x => `<div class="pv-item">${escapeHtml(x.label)}${x.type === 'cart' ? ' <span class="pv-accent">(0)</span>' : ''}</div>`).join('');
+    $('#mbg-preview-menu').innerHTML = `
+        <div class="pv-name">${escapeHtml((d.site && d.site.name) || '')}</div>
+        ${d.site && d.site.tagline ? `<div class="pv-tagline">${escapeHtml(d.site.tagline)}</div>` : ''}
+        ${items}`;
 }
 
 /* ---------- Simple fields ---------- */
@@ -302,11 +340,29 @@ document.querySelectorAll('#section-nav .cs-btn').forEach(btn => {
 });
 
 const settingsForm = $('#settings-form');
-settingsForm.addEventListener('input', (e) => { onSimpleFieldChange(e); onListInput(e); });
-settingsForm.addEventListener('change', (e) => { onSimpleFieldChange(e); onListInput(e); });
+settingsForm.addEventListener('input', (e) => { onSimpleFieldChange(e); onListInput(e); updateMobileBgPreview(); });
+settingsForm.addEventListener('change', (e) => { onSimpleFieldChange(e); onListInput(e); updateMobileBgPreview(); });
 settingsForm.addEventListener('click', onListClick);
 settingsForm.addEventListener('submit', saveSiteSettings);
 $('#settings-revert').addEventListener('click', revertSiteSettings);
+
+document.querySelectorAll('[data-url]').forEach(inp => { inp.value = location.origin + inp.dataset.url; });
+document.querySelectorAll('.copy-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+        const inp = btn.parentElement.querySelector('input');
+        try { await navigator.clipboard.writeText(inp.value); } catch (e) { inp.select(); document.execCommand('copy'); }
+        const old = btn.textContent;
+        btn.textContent = 'Copied';
+        setTimeout(() => { btn.textContent = old; }, 1500);
+    });
+});
+
+$('#mbg-reset').addEventListener('click', () => {
+    siteEditor.data.appearance = { ...(siteEditor.data.appearance || {}), mobileBg: { ...MBG_DEFAULTS } };
+    fillSettingsForm();
+    setSettingsDirty(true);
+    settingsStatus('Reset to the original look. Click Save to keep it.', 'ok');
+});
 
 $('#add-menu-link').addEventListener('click', () => {
     siteEditor.data.menu.push({ type: 'link', label: 'New link', url: 'https://', newTab: true, visible: true });
