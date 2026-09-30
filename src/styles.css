@@ -572,13 +572,6 @@ body {
 @media screen and (max-width: 700px) {
     body {
         overflow-y: auto;
-        /* Background zoomed out 25% on phones; soft fade where the picture ends. */
-        background-image:
-            linear-gradient(to bottom, rgba(13, 20, 32, 0) 88%, #0d1420 100%),
-            url('images/background.png');
-        background-size: 100% 75%, auto 75%;
-        background-position: center top, 75% top;
-        background-repeat: no-repeat, no-repeat;
     }
 
     .menu {
