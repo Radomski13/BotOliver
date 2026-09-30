@@ -183,6 +183,15 @@ async function route(req, context) {
             products[index] = existing.source === 'shopify'
                 ? { ...existing, ...product, ...Object.fromEntries(SHOPIFY_MANAGED_FIELDS.map(k => [k, existing[k]])) }
                 : { id: existing.id, ...product };
+            if (existing.source === 'shopify') {
+                // "Use Shopify's description" button, or an edit that differs from Shopify's text.
+                if (body.resetDescription) {
+                    products[index].description = existing.shopifyDescription || '';
+                    products[index].descriptionEdited = false;
+                } else {
+                    products[index].descriptionEdited = product.description !== (existing.shopifyDescription || '');
+                }
+            }
             await saveProducts(products);
             return json(200, products[index]);
         }

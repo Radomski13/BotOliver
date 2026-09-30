@@ -60,7 +60,7 @@ export function cleanProduct(input) {
         errors.push('Price must be a number (0 or more).');
     }
 
-    const description = str(input.description, 1000);
+    const description = String(input.description ?? '').replace(/\r\n/g, '\n').trim().slice(0, 5000);
 
     const image = str(input.image, 300);
     if (image && !/^(\/uploads\/[a-z0-9._-]+|images\/[a-zA-Z0-9._\/-]+|https:\/\/[^\s'"()<>]+)$/.test(image)) {

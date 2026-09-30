@@ -87,9 +87,9 @@
                 </div>
 
                 <div class="shopify-note" id="shopify-note" hidden>
-                    Synced from Shopify. Name, price, photos, description, sizes, stock and brand (vendor) are managed in Shopify
+                    Synced from Shopify. Name, price, photos, sizes, stock and brand (vendor) are managed in Shopify
                     and update on the next sync. <a id="shopify-edit-link" href="#" target="_blank" rel="noopener">Edit in Shopify &raquo;</a><br>
-                    You can still change: hidden, and the Google &amp; Meta ad details below.
+                    You can still change: the description, hidden, and the Google &amp; Meta ad details below.
                 </div>
 
                 <div class="form-grid">
@@ -111,7 +111,11 @@
 
                     <div class="field wide">
                         <label for="f-description">Description</label>
-                        <textarea id="f-description" class="cs-input" rows="3" maxlength="1000"></textarea>
+                        <textarea id="f-description" class="cs-input" rows="5" maxlength="5000"></textarea>
+                        <div class="desc-source" id="desc-source" hidden>
+                            <span id="desc-source-text"></span>
+                            <button type="button" class="cs-btn" id="desc-reset">Use Shopify's description</button>
+                        </div>
                     </div>
 
                     <div class="field wide">

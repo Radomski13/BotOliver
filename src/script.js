@@ -303,6 +303,7 @@ function initBuyDialog() {
         if (!selected) return;
 
         previewImage.style.backgroundImage = selected.image ? `url("${encodeURI(selected.image)}")` : 'none';
+        previewImage.classList.toggle('zoomable', !!selected.image);
         previewName.textContent = selected.name;
 
         previewDesc.textContent = selected.description;
@@ -359,6 +360,17 @@ function initBuyDialog() {
 
     categoryFilter.addEventListener('change', renderList);
     sizeSelect.addEventListener('change', updateSizeState);
+
+    // Click the photo to see it bigger (all of the product's photos, if it has several).
+    function enlarge() {
+        if (!selected || !selected.image || !window.Lightbox) return;
+        const list = selected.images && selected.images.length ? selected.images : [selected.image];
+        Lightbox.open(list, Math.max(0, list.indexOf(selected.image)), selected.name);
+    }
+    previewImage.addEventListener('click', enlarge);
+    previewImage.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); enlarge(); }
+    });
     window.matchMedia('(max-width: 700px)').addEventListener('change', renderList);
     addBtn.addEventListener('click', addToCart);
     dialog.querySelector('#view-cart-btn').addEventListener('click', () => {

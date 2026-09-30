@@ -80,6 +80,7 @@ function productPage({ product: p, products, settings, origin, wantedSize }) {
         product: {
             id: p.id, name: p.name, price: p.price, sizes, soldOut: !inStock, category: p.category,
             variantInfo: p.variantInfo || null,
+            images: ((p.images && p.images.length) ? p.images : (p.image ? [p.image] : [])).map(src => absUrl(origin, src)),
             variantIds: Object.fromEntries((sizes.length ? sizes : ['default']).map(s => [s, variantId(p, s)])),
         },
         currency,
@@ -135,7 +136,7 @@ function productPage({ product: p, products, settings, origin, wantedSize }) {
             <div class="pp-content">
                 <div class="pp-media">
                 <div class="pp-image">
-                    ${image ? `<img src="${esc(image)}" alt="${esc(p.name)}" width="600" height="600" id="pp-main-img">` : '<div class="pp-noimg">No image</div>'}
+                    ${image ? `<img src="${esc(image)}" alt="${esc(p.name)}" width="600" height="600" id="pp-main-img" class="zoomable" tabindex="0" role="button" title="Click to enlarge">` : '<div class="pp-noimg">No image</div>'}
                 </div>
                 ${(p.images || []).length > 1 ? `
                 <div class="pp-thumbs">
@@ -188,6 +189,7 @@ function productPage({ product: p, products, settings, origin, wantedSize }) {
     ${site.footer ? `<footer class="pp-footer">${esc(site.footer)}</footer>` : ''}
 
     <script>window.PRODUCT_PAGE = ${jsonForScript(pageData)};</script>
+    <script src="/lightbox.js"></script>
     <script src="/product.js"></script>
 </body>
 </html>`;

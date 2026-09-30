@@ -198,7 +198,8 @@ function loadIntoForm(p) {
         const domain = (typeof siteEditor !== 'undefined' && siteEditor.data && siteEditor.data.commerce.shopifyDomain) || state.shopifyDomain || '';
         $('#shopify-edit-link').href = domain ? `https://${domain}/admin/products/${encodeURIComponent(p.shopifyId)}` : '#';
     }
-    ['name', 'category', 'price', 'description', 'image', 'sizes', 'soldOut', 'brand'].forEach(k => { form[k].disabled = synced; });
+    ['name', 'category', 'price', 'image', 'sizes', 'soldOut', 'brand'].forEach(k => { form[k].disabled = synced; });
+    updateDescSource(p);
     document.querySelectorAll('#variant-grid input, .quick-sizes .cs-btn').forEach(el => { el.disabled = synced; });
     $('#upload-btn').disabled = synced;
     $('#edit-form').classList.toggle('is-synced', synced);
@@ -436,6 +437,32 @@ window.addEventListener('beforeunload', (e) => {
     }
 })();
 
+
+/* ---------- Description source (Shopify vs your own) ---------- */
+
+function updateDescSource(p) {
+    const box = $('#desc-source');
+    if (!p || p.source !== 'shopify') { box.hidden = true; return; }
+    box.hidden = false;
+    const own = form.description.value.trim() !== (p.shopifyDescription || '').trim();
+    $('#desc-source-text').textContent = own
+        ? 'Your own description — kept when syncing.'
+        : 'Shopify\'s description — updates on each sync. Edit it to use your own.';
+    $('#desc-reset').hidden = !own;
+}
+
+form.description.addEventListener('input', () => {
+    updateDescSource(state.products.find(x => x.id === state.editingId));
+});
+
+$('#desc-reset').addEventListener('click', () => {
+    const p = state.products.find(x => x.id === state.editingId);
+    if (!p) return;
+    form.description.value = p.shopifyDescription || '';
+    updateDescSource(p);
+    setDirty(true);
+    setStatus('Switched back to Shopify\'s description. Click Save to keep it.', 'ok');
+});
 
 /* ---------- Shopify sync panel ---------- */
 

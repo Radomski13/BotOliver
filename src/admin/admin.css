@@ -828,3 +828,17 @@ label.mini .cs-select {
 .is-synced textarea:disabled {
     opacity: 0.6;
 }
+
+.desc-source {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+    font-size: 14px;
+    color: var(--border-light);
+}
+
+.desc-source .cs-btn {
+    font-size: 14px;
+}

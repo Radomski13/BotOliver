@@ -8,7 +8,7 @@ const MAX_PAGES = 20; // up to 5,000 products
 
 // Fields that come from Shopify and are replaced on every sync.
 export const SHOPIFY_MANAGED_FIELDS = [
-    'name', 'category', 'price', 'description', 'image', 'images', 'sizes', 'variants', 'variantInfo', 'soldOut', 'brand',
+    'name', 'category', 'price', 'shopifyDescription', 'image', 'images', 'sizes', 'variants', 'variantInfo', 'soldOut', 'brand',
 ];
 
 function baseUrl(domain) {
@@ -29,7 +29,7 @@ function htmlToText(html) {
         .replace(/[ \t]+\n/g, '\n')
         .replace(/\n{3,}/g, '\n\n')
         .trim()
-        .slice(0, 1000);
+        .slice(0, 5000);
 }
 
 async function fetchAllShopifyProducts(domain) {
@@ -104,7 +104,10 @@ function mapProduct(sp, existing) {
         name: String(sp.title || 'Untitled').slice(0, 120),
         category: String(sp.product_type || 'Other').slice(0, 40) || 'Other',
         price: prices.length ? Math.min(...prices) : 0,
-        description: htmlToText(sp.body_html),
+        // Your own description (edited in the admin) wins; otherwise use Shopify's.
+        shopifyDescription: htmlToText(sp.body_html),
+        description: existing?.descriptionEdited ? existing.description : htmlToText(sp.body_html),
+        descriptionEdited: Boolean(existing?.descriptionEdited),
         image: images[0] || '',
         images,
         sizes: labels,

@@ -177,6 +177,14 @@
     margin: 0 0 10px;
 }
 
+.pp-image img.zoomable {
+    cursor: zoom-in;
+}
+
+.pp-image img:focus-visible {
+    outline: 2px solid var(--accent);
+}
+
 .pp-buy {
     display: flex;
     flex-direction: column;

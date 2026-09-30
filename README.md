@@ -50,14 +50,18 @@ Products can come straight from your Shopify store:
 
 What comes from Shopify: title, price (per size), description, photos, sizes/options, stock (per size),
 product type (as category), vendor (as brand) and the variant IDs checkout needs — so checkout works with no typing.
-What you set here and is kept between syncs: Hidden, and the Google & Meta ad details (color, gender, age group,
-Google category, GTIN).
+What you set here and is kept between syncs: the description (once you edit it — use "Use Shopify's description"
+to switch back), Hidden, and the Google & Meta ad details (color, gender, age group, Google category, GTIN).
 
 Notes:
 - Uses Shopify's public product list (`/products.json`) — no API key. The store can't be password protected.
 - Products deleted or unpublished in Shopify are removed on the next sync.
 - The starter example products are removed on the first sync. Products you add by hand here are kept
   (unless you untick "Keep products I added here").
+
+## Photos
+Shoppers can click a product photo (in the buy menu or on a product page) to see it full size.
+Products with several photos (from Shopify) get arrows, swipe on phones, and thumbnails on the product page.
 
 ## Product pages, feed and ad tracking
 - Every product has its own page: `yoursite.com/product/<product-id>` (add `?size=XL` to preselect a size).
@@ -99,6 +103,7 @@ Then open http://localhost:8888 and http://localhost:8888/admin
 - `netlify/functions/seo.mjs` — `/sitemap.xml` and `/robots.txt`
 - `netlify/functions/shopify-sync-scheduled.mjs` — hourly Shopify sync
 - `netlify/lib/shopify.mjs` — Shopify product import
+- `src/lightbox.js` — click-to-enlarge photo viewer
 - `netlify/lib/` — shared code, starter products and starter site content
 - `netlify.toml` — Netlify settings
 
