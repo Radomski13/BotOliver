@@ -255,7 +255,9 @@ function initBuyDialog() {
     categoryFilter.innerHTML = categories.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
 
     function renderList() {
-        const cat = categoryFilter.value;
+        // Category picker is hidden on phones, so show everything there.
+        const pickerShown = categoryFilter.closest('.category-row').offsetParent !== null;
+        const cat = pickerShown ? categoryFilter.value : 'All';
         const items = PRODUCTS.filter(p => cat === 'All' || p.category === cat);
         if (!items.length) {
             list.innerHTML = '<div class="cart-empty">No items right now. Check back soon.</div>';
@@ -264,7 +266,6 @@ function initBuyDialog() {
         list.innerHTML = items.map(p => `
             <div class="product-item${p.soldOut ? ' sold-out' : ''}${selected && selected.id === p.id ? ' selected' : ''}" data-id="${p.id}">
                 <div class="col-name item-col">${escapeHtml(p.name)}</div>
-                <div class="col-cat item-col">${escapeHtml(p.category)}</div>
                 <div class="col-price item-col">${p.soldOut ? 'Sold out' : money(p.price)}</div>
             </div>
         `).join('');
@@ -311,6 +312,7 @@ function initBuyDialog() {
     }
 
     categoryFilter.addEventListener('change', renderList);
+    window.matchMedia('(max-width: 700px)').addEventListener('change', renderList);
     addBtn.addEventListener('click', addToCart);
     dialog.querySelector('#view-cart-btn').addEventListener('click', () => {
         play('click');
