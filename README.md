@@ -42,6 +42,23 @@ Changes are live as soon as you click Save — no redeploy needed.
 In any text you can type `{free_shipping_min}` or `{flat_rate}` and it fills in your current shipping numbers.
 Links and email addresses typed in text become clickable automatically.
 
+## Products from Shopify
+Products can come straight from your Shopify store:
+1. Admin → **Checkout & promos** → enter your Shopify domain (e.g. `your-store.myshopify.com`) → Save.
+2. Admin → **Products** → **Sync from Shopify**. After that it syncs automatically every hour
+   (turn this off in Checkout & promos).
+
+What comes from Shopify: title, price (per size), description, photos, sizes/options, stock (per size),
+product type (as category), vendor (as brand) and the variant IDs checkout needs — so checkout works with no typing.
+What you set here and is kept between syncs: Hidden, and the Google & Meta ad details (color, gender, age group,
+Google category, GTIN).
+
+Notes:
+- Uses Shopify's public product list (`/products.json`) — no API key. The store can't be password protected.
+- Products deleted or unpublished in Shopify are removed on the next sync.
+- The starter example products are removed on the first sync. Products you add by hand here are kept
+  (unless you untick "Keep products I added here").
+
 ## Product pages, feed and ad tracking
 - Every product has its own page: `yoursite.com/product/<product-id>` (add `?size=XL` to preselect a size).
   Pages include price/stock tags for Meta and Google, and Google's product data (schema.org).
@@ -80,6 +97,8 @@ Then open http://localhost:8888 and http://localhost:8888/admin
 - `netlify/functions/product.mjs` — product pages at `/product/...`
 - `netlify/functions/feed.mjs` — product feed at `/feed.xml`
 - `netlify/functions/seo.mjs` — `/sitemap.xml` and `/robots.txt`
+- `netlify/functions/shopify-sync-scheduled.mjs` — hourly Shopify sync
+- `netlify/lib/shopify.mjs` — Shopify product import
 - `netlify/lib/` — shared code, starter products and starter site content
 - `netlify.toml` — Netlify settings
 

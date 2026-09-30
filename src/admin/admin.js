@@ -115,12 +115,13 @@ function renderList() {
         rows.innerHTML = '<div class="empty">No products yet. Click "+ New" to add one.</div>';
     } else {
         rows.innerHTML = state.products.map((p, i) => {
+            const src = p.source === 'shopify' ? '<span class="tag shop" title="Synced from Shopify">S</span> ' : '';
             const status = p.hidden ? '<span class="tag hidden">Hidden</span>'
                 : p.soldOut ? '<span class="tag sold">Sold out</span>'
                 : '<span class="tag live">Live</span>';
             return `
                 <div class="row${p.id === state.editingId ? ' selected' : ''}" data-id="${escapeHtml(p.id)}">
-                    <div class="c-name">${escapeHtml(p.name)}</div>
+                    <div class="c-name">${src}${escapeHtml(p.name)}</div>
                     <div class="c-price">${money(p.price)}</div>
                     <div class="c-status">${status}</div>
                     <div class="c-move">
@@ -191,7 +192,17 @@ function loadIntoForm(p) {
     renderVariantInputs(p ? p.variants || {} : {});
     updatePreview();
 
-    $('#delete-btn').hidden = !p;
+    const synced = !!(p && p.source === 'shopify');
+    $('#shopify-note').hidden = !synced;
+    if (synced) {
+        const domain = (typeof siteEditor !== 'undefined' && siteEditor.data && siteEditor.data.commerce.shopifyDomain) || state.shopifyDomain || '';
+        $('#shopify-edit-link').href = domain ? `https://${domain}/admin/products/${encodeURIComponent(p.shopifyId)}` : '#';
+    }
+    ['name', 'category', 'price', 'description', 'image', 'sizes', 'soldOut', 'brand'].forEach(k => { form[k].disabled = synced; });
+    document.querySelectorAll('#variant-grid input, .quick-sizes .cs-btn').forEach(el => { el.disabled = synced; });
+    $('#upload-btn').disabled = synced;
+    $('#edit-form').classList.toggle('is-synced', synced);
+    $('#delete-btn').hidden = !p || synced;
     $('#duplicate-btn').hidden = !p;
     setStatus('');
     setDirty(false);
@@ -424,3 +435,84 @@ window.addEventListener('beforeunload', (e) => {
         showLogin();
     }
 })();
+
+
+/* ---------- Shopify sync panel ---------- */
+
+function timeAgo(iso) {
+    const secs = Math.round((Date.now() - new Date(iso).getTime()) / 1000);
+    if (secs < 60) return 'just now';
+    if (secs < 3600) return `${Math.round(secs / 60)} min ago`;
+    if (secs < 86400) return `${Math.round(secs / 3600)} hr ago`;
+    return new Date(iso).toLocaleString();
+}
+
+function renderSyncStatus(status) {
+    const el = $('#sync-status');
+    el.classList.remove('error', 'ok');
+    if (!status) {
+        el.textContent = 'Not synced yet. Add your Shopify domain in "Checkout & promos", then click Sync.';
+    } else if (!status.ok) {
+        el.textContent = `Last sync failed (${timeAgo(status.at)}): ${status.error}`;
+        el.classList.add('error');
+    } else {
+        el.textContent = `Last sync ${timeAgo(status.at)}${status.trigger === 'hourly' ? ' (automatic)' : ''}: ${status.fromShopify} products from ${status.domain} — ${status.added} new, ${status.updated} updated, ${status.removed} removed.`;
+        el.classList.add('ok');
+    }
+    const manual = state.products.filter(p => p.source !== 'shopify').length;
+    const shopify = state.products.length - manual;
+    $('#remove-manual-btn').hidden = !(manual && shopify);
+    if (manual && shopify) $('#remove-manual-btn').textContent = `Remove ${manual} product${manual === 1 ? '' : 's'} not from Shopify`;
+}
+
+async function refreshSyncStatus() {
+    try {
+        const { status, domain } = await api('GET', '/api/admin/shopify/status');
+        state.shopifyDomain = domain;
+        renderSyncStatus(status);
+        const current = state.products.find(x => x.id === state.editingId);
+        if (current && current.source === 'shopify' && domain) {
+            $('#shopify-edit-link').href = `https://${domain}/admin/products/${encodeURIComponent(current.shopifyId)}`;
+        }
+    } catch (e) {
+        $('#sync-status').textContent = e.message;
+    }
+}
+
+$('#sync-btn').addEventListener('click', async () => {
+    if (!(await okToLeave())) return;
+    const btn = $('#sync-btn');
+    btn.disabled = true;
+    btn.textContent = 'Syncing...';
+    $('#sync-status').textContent = 'Getting products from Shopify...';
+    try {
+        const result = await api('POST', '/api/admin/shopify/sync');
+        state.products = result.products;
+        const keep = state.products.find(x => x.id === state.editingId);
+        loadIntoForm(keep || state.products[0] || null);
+        renderSyncStatus(result);
+    } catch (e) {
+        $('#sync-status').textContent = e.message;
+        $('#sync-status').classList.add('error');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Sync from Shopify';
+    }
+});
+
+$('#remove-manual-btn').addEventListener('click', async () => {
+    const n = state.products.filter(p => p.source !== 'shopify').length;
+    if (!(await confirmBox(`Delete the ${n} product(s) that aren't from Shopify? This can't be undone.`))) return;
+    try {
+        const result = await api('POST', '/api/admin/shopify/remove-manual');
+        state.products = result.products;
+        loadIntoForm(state.products[0] || null);
+        await refreshSyncStatus();
+    } catch (e) {
+        setStatus(e.message, 'error');
+    }
+});
+
+// Load sync status whenever the admin opens.
+new MutationObserver(() => { if (!$('#admin-view').hidden) refreshSyncStatus(); })
+    .observe($('#admin-view'), { attributes: true, attributeFilter: ['hidden'] });

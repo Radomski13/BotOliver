@@ -34,23 +34,49 @@
     const msg = document.getElementById('pp-msg');
     const currentSize = () => (sizeSelect ? sizeSelect.value : 'default');
 
+    const info = (size) => (p.variantInfo && p.variantInfo[size]) || null;
+    const priceFor = (size) => (info(size) && Number.isFinite(info(size).price) ? info(size).price : p.price);
+    const available = (size) => !p.soldOut && (info(size) ? info(size).available !== false : true);
+    const fmt = (n) => new Intl.NumberFormat('en-US', { style: 'currency', currency: data.currency }).format(n);
+
     function trackItem(qty) {
         const size = currentSize();
-        return [{ id: p.variantIds[size] || p.id, name: p.name, price: p.price, quantity: qty, size: size === 'default' ? '' : size }];
+        return [{ id: p.variantIds[size] || p.id, name: p.name, price: priceFor(size), quantity: qty, size: size === 'default' ? '' : size }];
     }
 
-    // Keep the address bar in sync with the chosen size (matches feed links).
+    // Price, stock and button follow the chosen size; address bar matches feed links.
+    const addBtn = document.getElementById('pp-add');
+    function updateSize() {
+        const size = currentSize();
+        const ok = available(size);
+        document.getElementById('pp-price').textContent = fmt(priceFor(size));
+        const stock = document.getElementById('pp-stock');
+        stock.textContent = ok ? 'In stock' : (p.soldOut ? 'Sold out' : 'Sold out in this size');
+        stock.className = 'pp-stock ' + (ok ? 'in' : 'out');
+        addBtn.disabled = !ok;
+        addBtn.textContent = ok ? 'Add to cart' : 'Sold out';
+    }
     if (sizeSelect) {
         sizeSelect.addEventListener('change', () => {
             const url = new URL(location.href);
             url.searchParams.set('size', sizeSelect.value);
             history.replaceState(null, '', url);
+            updateSize();
         });
     }
 
+    // Photo thumbnails
+    document.querySelectorAll('.pp-thumb').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const main = document.getElementById('pp-main-img');
+            if (main) main.src = btn.dataset.src;
+            document.querySelectorAll('.pp-thumb').forEach(b => b.classList.toggle('active', b === btn));
+        });
+    });
+
     document.getElementById('pp-buy').addEventListener('submit', (e) => {
         e.preventDefault();
-        if (p.soldOut) return;
+        if (!available(currentSize())) return;
         const qty = Math.max(1, Math.min(20, parseInt(qtyInput.value, 10) || 1));
         const size = currentSize();
         const items = readCart();

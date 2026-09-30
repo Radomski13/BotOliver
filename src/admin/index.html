@@ -52,6 +52,15 @@
 
         <main class="layout" id="view-products">
             <!-- Product list -->
+            <div class="list-col">
+            <div class="panel-box sync-box" id="sync-box">
+                <div class="box-head">
+                    <span>Shopify</span>
+                    <button type="button" class="cs-btn" id="sync-btn">Sync from Shopify</button>
+                </div>
+                <p class="sync-status" id="sync-status">Loading...</p>
+                <button type="button" class="cs-btn small-btn" id="remove-manual-btn" hidden>Remove products that aren't from Shopify</button>
+            </div>
             <div class="panel-box list-box">
                 <div class="box-head">
                     <span>Products (<span id="product-count">0</span>)</span>
@@ -68,11 +77,19 @@
                 </div>
             </div>
 
+            </div>
+
             <!-- Editor -->
             <form class="panel-box edit-box" id="edit-form" novalidate>
                 <div class="box-head">
                     <span id="edit-title">New product</span>
                     <span class="dirty-flag" id="dirty-flag" hidden>Unsaved changes</span>
+                </div>
+
+                <div class="shopify-note" id="shopify-note" hidden>
+                    Synced from Shopify. Name, price, photos, description, sizes, stock and brand (vendor) are managed in Shopify
+                    and update on the next sync. <a id="shopify-edit-link" href="#" target="_blank" rel="noopener">Edit in Shopify &raquo;</a><br>
+                    You can still change: hidden, and the Google &amp; Meta ad details below.
                 </div>
 
                 <div class="form-grid">
@@ -367,6 +384,16 @@
                     <div class="field">
                         <label for="s-c-shopify">Shopify domain <span class="hint">(turns on checkout)</span></label>
                         <input type="text" id="s-c-shopify" class="cs-input" maxlength="120" placeholder="your-store.myshopify.com" data-path="commerce.shopifyDomain">
+                    </div>
+                    <div class="field wide checks">
+                        <div class="cs-checkbox">
+                            <input id="s-sync-auto" type="checkbox" data-path="shopifySync.auto">
+                            <label class="cs-checkbox__label" for="s-sync-auto">Sync products from Shopify automatically every hour</label>
+                        </div>
+                        <div class="cs-checkbox">
+                            <input id="s-sync-keep" type="checkbox" data-path="shopifySync.keepManual">
+                            <label class="cs-checkbox__label" for="s-sync-keep">Keep products I added here (not in Shopify) when syncing</label>
+                        </div>
                     </div>
                 </div>
                 <div class="sub-head">

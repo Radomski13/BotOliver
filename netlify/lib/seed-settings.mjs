@@ -69,6 +69,9 @@ export default {
         ],
     },
 
+    // Pull products from Shopify (needs commerce.shopifyDomain).
+    shopifySync: { auto: true, keepManual: true },
+
     // Ad tracking. Leave empty until you have the IDs.
     marketing: { metaPixelId: '', googleTagId: '' },
 

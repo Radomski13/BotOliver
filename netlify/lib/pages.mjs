@@ -76,3 +76,20 @@ export function trackingHead(marketing = {}) {
     }
     return html;
 }
+
+// Per-size price and stock (Shopify products can differ by size).
+export function priceFor(p, size) {
+    const v = p.variantInfo && p.variantInfo[size];
+    return v && Number.isFinite(v.price) ? v.price : p.price;
+}
+
+export function sizeAvailable(p, size) {
+    const v = p.variantInfo && p.variantInfo[size];
+    return v ? v.available !== false && !p.soldOut : !p.soldOut;
+}
+
+export function priceRange(p) {
+    const prices = p.variantInfo ? Object.values(p.variantInfo).map(v => v.price).filter(Number.isFinite) : [];
+    if (!prices.length) return { min: p.price, max: p.price };
+    return { min: Math.min(...prices), max: Math.max(...prices) };
+}

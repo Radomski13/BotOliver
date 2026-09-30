@@ -5,6 +5,7 @@ import {
     dataStore, imageStore, MAX_IMAGE_BYTES,
     loadSettings, saveSettings, cleanSettings, publicSettings, promoLabel,
 } from '../lib/shared.mjs';
+import { syncFromShopify, getSyncStatus, removeNonShopifyProducts, SHOPIFY_MANAGED_FIELDS } from '../lib/shopify.mjs';
 
 export const config = { path: '/api/*' };
 
@@ -97,6 +98,21 @@ async function route(req, context) {
         return json(200, settings);
     }
 
+    if (method === 'POST' && p === '/api/admin/shopify/sync') {
+        const result = await syncFromShopify({ trigger: 'manual' });
+        return json(200, { ...result, products: await loadProducts() });
+    }
+
+    if (method === 'GET' && p === '/api/admin/shopify/status') {
+        const settings = await loadSettings();
+        return json(200, { status: await getSyncStatus(), domain: settings.commerce.shopifyDomain || '' });
+    }
+
+    if (method === 'POST' && p === '/api/admin/shopify/remove-manual') {
+        const result = await removeNonShopifyProducts();
+        return json(200, { ...result, products: await loadProducts() });
+    }
+
     if (method === 'GET' && p === '/api/admin/products') {
         return json(200, await loadProducts());
     }
@@ -156,14 +172,25 @@ async function route(req, context) {
         if (index === -1) return json(404, { error: 'Product not found. Refresh the page.' });
 
         if (method === 'PUT') {
-            const { errors, product } = cleanProduct(await readJson(req));
+            const existing = products[index];
+            const body = await readJson(req);
+            // Shopify products: title, price, photos, sizes etc. come from Shopify — keep those as synced.
+            const input = existing.source === 'shopify'
+                ? { ...body, ...Object.fromEntries(SHOPIFY_MANAGED_FIELDS.map(k => [k, existing[k]])) }
+                : body;
+            const { errors, product } = cleanProduct(input);
             if (errors.length) return json(400, { error: errors.join(' ') });
-            products[index] = { id: products[index].id, ...product };
+            products[index] = existing.source === 'shopify'
+                ? { ...existing, ...product, ...Object.fromEntries(SHOPIFY_MANAGED_FIELDS.map(k => [k, existing[k]])) }
+                : { id: existing.id, ...product };
             await saveProducts(products);
             return json(200, products[index]);
         }
 
         if (method === 'DELETE') {
+            if (products[index].source === 'shopify') {
+                return json(400, { error: 'This product comes from Shopify and would come back on the next sync. Tick "Hidden from store" instead, or delete it in Shopify.' });
+            }
             const [removed] = products.splice(index, 1);
             await saveProducts(products);
             return json(200, removed);

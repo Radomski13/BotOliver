@@ -1,5 +1,5 @@
 import { loadProducts, loadSettings } from '../lib/shared.mjs';
-import { esc, siteOrigin, absUrl, productPath, variantId, plainText, adFriendlyImage } from '../lib/pages.mjs';
+import { esc, siteOrigin, absUrl, productPath, variantId, plainText, adFriendlyImage, priceFor, sizeAvailable } from '../lib/pages.mjs';
 
 // Product feed for Google Merchant Center and Meta (Facebook/Instagram) catalogs.
 // Both accept this Google-format RSS feed. One item per size, grouped with item_group_id.
@@ -25,15 +25,16 @@ export default async (req) => {
                 ['g:description', plainText(p.description) || p.name],
                 ['g:link', link],
                 ['g:image_link', adFriendlyImage(p.image) ? absUrl(origin, p.image) : ''],
-                ['g:availability', p.soldOut ? 'out_of_stock' : 'in_stock'],
-                ['g:price', `${p.price.toFixed(2)} ${currency}`],
+                ['g:availability', sizeAvailable(p, size || 'default') ? 'in_stock' : 'out_of_stock'],
+                ['g:price', `${priceFor(p, size || 'default').toFixed(2)} ${currency}`],
                 ['g:condition', 'new'],
                 ['g:brand', p.brand || storeName],
                 ['g:product_type', p.category],
                 ['g:google_product_category', p.googleCategory],
                 ['g:item_group_id', hasGroup ? p.id : ''],
-                ['g:size', size || ''],
-                ['g:color', p.color],
+                ['g:size', (size && p.variantInfo?.[size]?.size) || size || ''],
+                ...(p.images || []).slice(1, 11).filter(adFriendlyImage).map(src => ['g:additional_image_link', src]),
+                ['g:color', (size && p.variantInfo?.[size]?.color) || p.color],
                 ['g:gender', p.gender],
                 ['g:age_group', p.ageGroup],
             ];

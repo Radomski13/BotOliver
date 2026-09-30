@@ -774,3 +774,57 @@ label.mini .cs-select {
 .copy-row .cs-btn {
     font-size: 16px;
 }
+
+/* ---------- Shopify sync ---------- */
+
+.list-col {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
+}
+
+.sync-status {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.3;
+    color: var(--secondary-text);
+}
+
+.sync-status.ok { color: #9fce6a; }
+.sync-status.error { color: #e0685f; }
+
+.small-btn {
+    margin-top: 10px;
+    font-size: 15px !important;
+}
+
+.tag.shop {
+    display: inline-block;
+    min-width: 14px;
+    text-align: center;
+    font-size: 12px;
+    color: #1b1d18;
+    background: #95bf47;
+    padding: 0 3px;
+    margin-right: 2px;
+}
+
+.shopify-note {
+    margin: 0 0 12px;
+    padding: 8px 10px;
+    font-size: 15px;
+    line-height: 1.35;
+    background: rgba(149, 191, 71, 0.12);
+    border: 1px solid rgba(149, 191, 71, 0.5);
+}
+
+.shopify-note a {
+    color: var(--accent);
+}
+
+.is-synced .cs-input:disabled,
+.is-synced .cs-select:disabled,
+.is-synced textarea:disabled {
+    opacity: 0.6;
+}

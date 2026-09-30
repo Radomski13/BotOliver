@@ -18,6 +18,10 @@ async function loadStore() {
 const money = (n) => new Intl.NumberFormat('en-US', { style: 'currency', currency: SETTINGS.commerce.currency || 'USD' }).format(n);
 const moneyShort = (n) => money(n).replace(/\.00$/, '');
 
+// Per-size price and stock (products synced from Shopify can differ by size).
+const priceFor = (p, size) => (p.variantInfo && p.variantInfo[size] && Number.isFinite(p.variantInfo[size].price)) ? p.variantInfo[size].price : p.price;
+const sizeAvailable = (p, size) => (p.variantInfo && p.variantInfo[size]) ? p.variantInfo[size].available !== false : !p.soldOut;
+
 const sounds = {
     click: new Audio('sounds/menu_click.wav'),
     close: new Audio('sounds/window_close.wav'),
@@ -90,7 +94,7 @@ const cart = {
     totals() {
         const subtotal = this.items.reduce((sum, i) => {
             const p = PRODUCTS.find(p => p.id === i.id);
-            return sum + (p ? p.price * i.qty : 0);
+            return sum + (p ? priceFor(p, i.size) * i.qty : 0);
         }, 0);
 
         let discount = 0;
@@ -300,7 +304,7 @@ function initBuyDialog() {
 
         previewImage.style.backgroundImage = selected.image ? `url("${encodeURI(selected.image)}")` : 'none';
         previewName.textContent = selected.name;
-        previewPrice.textContent = selected.soldOut ? 'Sold out' : money(selected.price);
+
         previewDesc.textContent = selected.description;
         const pageLink = dialog.querySelector('#preview-link');
         pageLink.href = `/product/${encodeURIComponent(selected.id)}`;
@@ -309,24 +313,43 @@ function initBuyDialog() {
         if (selected.sizes.length) {
             sizeRow.hidden = false;
             const prev = sizeSelect.value;
-            sizeSelect.innerHTML = selected.sizes.map(s => `<option>${escapeHtml(s)}</option>`).join('');
-            sizeSelect.value = selected.sizes.includes(prev) ? prev : (selected.sizes.includes('L') ? 'L' : selected.sizes[0]);
+            sizeSelect.innerHTML = selected.sizes.map(sz => {
+                const ok = sizeAvailable(selected, sz);
+                return `<option value="${escapeHtml(sz)}"${ok ? '' : ' disabled'}>${escapeHtml(sz)}${ok ? '' : ' (sold out)'}</option>`;
+            }).join('');
+            const inStock = selected.sizes.filter(sz => sizeAvailable(selected, sz));
+            const pick = [prev, 'L', inStock[0], selected.sizes[0]].find(sz => sz && selected.sizes.includes(sz) && (sizeAvailable(selected, sz) || !inStock.length));
+            sizeSelect.value = pick;
         } else {
             sizeRow.hidden = true;
         }
 
         qtyInput.value = 1;
-        addBtn.disabled = selected.soldOut;
+        updateSizeState();
+    }
+
+    function currentSize() {
+        return selected && selected.sizes.length ? sizeSelect.value : 'default';
+    }
+
+    // Price and Buy button follow the chosen size.
+    function updateSizeState() {
+        if (!selected) return;
+        const size = currentSize();
+        const available = !selected.soldOut && sizeAvailable(selected, size);
+        previewPrice.textContent = selected.soldOut ? 'Sold out' : available ? money(priceFor(selected, size)) : `${money(priceFor(selected, size))} — sold out in this size`;
+        addBtn.disabled = !available;
     }
 
     function addToCart() {
         if (!selected || selected.soldOut) return;
         const qty = Math.max(1, Math.min(20, parseInt(qtyInput.value, 10) || 1));
-        const size = selected.sizes.length ? sizeSelect.value : 'default';
+        const size = currentSize();
+        if (!sizeAvailable(selected, size)) return;
         cart.add(selected.id, size, qty);
         play('buy');
         if (window.StoreTracking) {
-            StoreTracking.addToCart([{ id: StoreTracking.variantId(selected.id, size), name: selected.name, price: selected.price, quantity: qty, size: size === 'default' ? '' : size }], SETTINGS.commerce.currency);
+            StoreTracking.addToCart([{ id: StoreTracking.variantId(selected.id, size), name: selected.name, price: priceFor(selected, size), quantity: qty, size: size === 'default' ? '' : size }], SETTINGS.commerce.currency);
         }
 
         msg.textContent = `Added ${qty} x ${selected.name}${size !== 'default' ? ` (${size})` : ''}`;
@@ -335,6 +358,7 @@ function initBuyDialog() {
     }
 
     categoryFilter.addEventListener('change', renderList);
+    sizeSelect.addEventListener('change', updateSizeState);
     window.matchMedia('(max-width: 700px)').addEventListener('change', renderList);
     addBtn.addEventListener('click', addToCart);
     dialog.querySelector('#view-cart-btn').addEventListener('click', () => {
@@ -377,7 +401,7 @@ function initCartDialog() {
                                 <button type="button" class="cs-btn qty-plus" aria-label="Increase">+</button>
                             </div>
                         </div>
-                        <div class="col-price item-col">${money(p.price * item.qty)}</div>
+                        <div class="col-price item-col">${money(priceFor(p, item.size) * item.qty)}</div>
                         <div class="col-remove item-col">
                             <button type="button" class="cs-btn remove-btn" aria-label="Remove">x</button>
                         </div>
@@ -473,7 +497,7 @@ function initCartDialog() {
         if (window.StoreTracking) {
             StoreTracking.beginCheckout(cart.items.map(i => {
                 const p = PRODUCTS.find(p => p.id === i.id);
-                return { id: StoreTracking.variantId(i.id, i.size), name: p.name, price: p.price, quantity: i.qty, size: i.size === 'default' ? '' : i.size };
+                return { id: StoreTracking.variantId(i.id, i.size), name: p.name, price: priceFor(p, i.size), quantity: i.qty, size: i.size === 'default' ? '' : i.size };
             }), SETTINGS.commerce.currency);
         }
 

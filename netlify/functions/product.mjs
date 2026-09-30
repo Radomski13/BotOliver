@@ -1,6 +1,7 @@
 import { loadProducts, loadSettings } from '../lib/shared.mjs';
 import {
     esc, jsonForScript, siteOrigin, absUrl, productPath, variantId, money, plainText, adFriendlyImage, trackingHead,
+    priceFor, sizeAvailable, priceRange,
 } from '../lib/pages.mjs';
 
 // One page per product: /product/<id>  (optional ?size=M preselects a size)
@@ -35,9 +36,13 @@ function productPage({ product: p, products, settings, origin, wantedSize }) {
     const shareImage = adFriendlyImage(p.image) ? image : '';
     const desc = plainText(p.description, 300) || `${p.name} from ${site.name}.`;
     const title = `${p.name} | ${site.name}`;
-    const inStock = !p.soldOut;
     const sizes = p.sizes || [];
-    const selectedSize = sizes.includes(wantedSize) ? wantedSize : (sizes.includes('L') ? 'L' : sizes[0]);
+    const inStockSizes = sizes.filter(sz => sizeAvailable(p, sz));
+    const selectedSize = [wantedSize, 'L', inStockSizes[0], sizes[0]].find(sz => sz && sizes.includes(sz) && (sizeAvailable(p, sz) || !inStockSizes.length || sz === wantedSize));
+    const inStock = sizes.length ? inStockSizes.length > 0 : !p.soldOut;
+    const range = priceRange(p);
+    const shownPrice = selectedSize ? priceFor(p, selectedSize) : p.price;
+    const selectedAvailable = selectedSize ? sizeAvailable(p, selectedSize) : inStock;
 
     // Google's product format (shows price and stock in search results).
     const jsonLd = {
@@ -51,10 +56,19 @@ function productPage({ product: p, products, settings, origin, wantedSize }) {
         ...(p.gtin ? { gtin: p.gtin } : {}),
         ...(p.color ? { color: p.color } : {}),
         ...(sizes.length ? { size: sizes.join(', ') } : {}),
-        offers: {
+        offers: range.min === range.max ? {
             '@type': 'Offer',
             url,
-            price: p.price.toFixed(2),
+            price: range.min.toFixed(2),
+            priceCurrency: currency,
+            availability: inStock ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+            itemCondition: 'https://schema.org/NewCondition',
+        } : {
+            '@type': 'AggregateOffer',
+            url,
+            lowPrice: range.min.toFixed(2),
+            highPrice: range.max.toFixed(2),
+            offerCount: sizes.length,
             priceCurrency: currency,
             availability: inStock ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
             itemCondition: 'https://schema.org/NewCondition',
@@ -64,7 +78,8 @@ function productPage({ product: p, products, settings, origin, wantedSize }) {
     // Data the page script needs (cart + tracking).
     const pageData = {
         product: {
-            id: p.id, name: p.name, price: p.price, sizes, soldOut: !!p.soldOut, category: p.category,
+            id: p.id, name: p.name, price: p.price, sizes, soldOut: !inStock, category: p.category,
+            variantInfo: p.variantInfo || null,
             variantIds: Object.fromEntries((sizes.length ? sizes : ['default']).map(s => [s, variantId(p, s)])),
         },
         currency,
@@ -91,7 +106,7 @@ function productPage({ product: p, products, settings, origin, wantedSize }) {
     <meta property="product:brand" content="${esc(brand)}">
     <meta property="product:availability" content="${inStock ? 'in stock' : 'out of stock'}">
     <meta property="product:condition" content="new">
-    <meta property="product:price:amount" content="${p.price.toFixed(2)}">
+    <meta property="product:price:amount" content="${shownPrice.toFixed(2)}">
     <meta property="product:price:currency" content="${esc(currency)}">
     <meta property="product:retailer_item_id" content="${esc(p.id)}">
     <meta name="twitter:card" content="${shareImage ? 'summary_large_image' : 'summary'}">
@@ -118,12 +133,18 @@ function productPage({ product: p, products, settings, origin, wantedSize }) {
                 <h1 class="pp-title">${esc(p.name)}</h1>
             </div>
             <div class="pp-content">
+                <div class="pp-media">
                 <div class="pp-image">
-                    ${image ? `<img src="${esc(image)}" alt="${esc(p.name)}" width="600" height="600">` : '<div class="pp-noimg">No image</div>'}
+                    ${image ? `<img src="${esc(image)}" alt="${esc(p.name)}" width="600" height="600" id="pp-main-img">` : '<div class="pp-noimg">No image</div>'}
+                </div>
+                ${(p.images || []).length > 1 ? `
+                <div class="pp-thumbs">
+                    ${p.images.map((src, i) => `<button type="button" class="pp-thumb${i === 0 ? ' active' : ''}" data-src="${esc(src)}"><img src="${esc(src)}" alt="" loading="lazy" width="64" height="64"></button>`).join('')}
+                </div>` : ''}
                 </div>
                 <div class="pp-details">
-                    <p class="pp-price">${esc(money(p.price, currency))}</p>
-                    <p class="pp-stock ${inStock ? 'in' : 'out'}">${inStock ? 'In stock' : 'Sold out'}</p>
+                    <p class="pp-price" id="pp-price">${esc(money(shownPrice, currency))}</p>
+                    <p class="pp-stock ${selectedAvailable ? 'in' : 'out'}" id="pp-stock">${selectedAvailable ? 'In stock' : (inStock ? 'Sold out in this size' : 'Sold out')}</p>
                     <div class="pp-desc">${esc(p.description || '').split(/\n{2,}/).map(par => `<p>${par.replace(/\n/g, '<br>')}</p>`).join('')}</div>
 
                     <form class="pp-buy" id="pp-buy">
@@ -131,7 +152,7 @@ function productPage({ product: p, products, settings, origin, wantedSize }) {
                         <div class="pp-row">
                             <label for="pp-size">Size</label>
                             <select id="pp-size" class="cs-select">
-                                ${sizes.map(s => `<option${s === selectedSize ? ' selected' : ''}>${esc(s)}</option>`).join('')}
+                                ${sizes.map(sz => `<option value="${esc(sz)}"${sz === selectedSize ? ' selected' : ''}${sizeAvailable(p, sz) ? '' : ' disabled'}>${esc(sz)}${sizeAvailable(p, sz) ? '' : ' (sold out)'}</option>`).join('')}
                             </select>
                         </div>` : ''}
                         <div class="pp-row">
@@ -139,7 +160,7 @@ function productPage({ product: p, products, settings, origin, wantedSize }) {
                             <input type="number" id="pp-qty" class="cs-input" min="1" max="20" value="1">
                         </div>
                         <div class="pp-actions">
-                            <button type="submit" class="cs-btn pp-add" ${inStock ? '' : 'disabled'}>${inStock ? 'Add to cart' : 'Sold out'}</button>
+                            <button type="submit" class="cs-btn pp-add" id="pp-add" ${selectedAvailable ? '' : 'disabled'}>${selectedAvailable ? 'Add to cart' : 'Sold out'}</button>
                             <a class="cs-btn" href="/?cart=1">View cart</a>
                         </div>
                         <p class="pp-msg" id="pp-msg" role="status"></p>
@@ -158,7 +179,7 @@ function productPage({ product: p, products, settings, origin, wantedSize }) {
                 <a class="pp-card" href="${esc(productPath(m))}">
                     <span class="pp-card-img">${m.image ? `<img src="${esc(absUrl(origin, m.image))}" alt="" loading="lazy" width="200" height="200">` : ''}</span>
                     <span class="pp-card-name">${esc(m.name)}</span>
-                    <span class="pp-card-price">${esc(money(m.price, currency))}</span>
+                    <span class="pp-card-price">${priceRange(m).min !== priceRange(m).max ? 'From ' : ''}${esc(money(m.price, currency))}</span>
                 </a>`).join('')}
             </div>
         </section>` : ''}

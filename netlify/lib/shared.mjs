@@ -111,6 +111,7 @@ export async function loadSettings() {
     // Fill in sections added after the settings were first saved.
     const merged = { ...structuredClone(seedSettings), ...saved };
     merged.marketing = { ...seedSettings.marketing, ...(saved.marketing || {}) };
+    merged.shopifySync = { ...seedSettings.shopifySync, ...(saved.shopifySync || {}) };
     merged.appearance = {
         ...seedSettings.appearance,
         ...(saved.appearance || {}),
@@ -252,9 +253,13 @@ export function cleanSettings(input) {
     if (googleTagId && !/^(G|AW|GT)-[A-Z0-9-]+$/.test(googleTagId)) errors.push('Google tag ID should look like G-XXXXXXX or AW-XXXXXXXXX.');
     const marketing = { metaPixelId, googleTagId };
 
+    const ss = obj(input.shopifySync);
+    const shopifySync = { auto: ss.auto !== false, keepManual: ss.keepManual !== false };
+
     return {
         errors,
         settings: {
+            shopifySync,
             marketing,
             appearance,
             site: cleanSite,

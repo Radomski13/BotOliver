@@ -1,4 +1,4 @@
-// Starting products, used the first time the site runs (before anything is saved in the admin).
+// Starter example products. They're removed automatically the first time you sync from Shopify.
 export default [
   {
     "id": "headshot-tee",
@@ -22,7 +22,8 @@ export default [
     "gender": "unisex",
     "ageGroup": "adult",
     "googleCategory": "Apparel & Accessories > Clothing > Shirts & Tops",
-    "gtin": ""
+    "gtin": "",
+    "placeholder": true
   },
   {
     "id": "rush-b-tee",
@@ -46,7 +47,8 @@ export default [
     "gender": "unisex",
     "ageGroup": "adult",
     "googleCategory": "Apparel & Accessories > Clothing > Shirts & Tops",
-    "gtin": ""
+    "gtin": "",
+    "placeholder": true
   },
   {
     "id": "eco-round-hoodie",
@@ -70,7 +72,8 @@ export default [
     "gender": "unisex",
     "ageGroup": "adult",
     "googleCategory": "Apparel & Accessories > Clothing > Shirts & Tops",
-    "gtin": ""
+    "gtin": "",
+    "placeholder": true
   },
   {
     "id": "clutch-cap",
@@ -88,7 +91,8 @@ export default [
     "gender": "unisex",
     "ageGroup": "adult",
     "googleCategory": "Apparel & Accessories > Clothing Accessories > Hats",
-    "gtin": ""
+    "gtin": "",
+    "placeholder": true
   },
   {
     "id": "bombsite-mousepad",
@@ -106,7 +110,8 @@ export default [
     "gender": "",
     "ageGroup": "",
     "googleCategory": "",
-    "gtin": ""
+    "gtin": "",
+    "placeholder": true
   },
   {
     "id": "sticker-pack",
@@ -124,6 +129,7 @@ export default [
     "gender": "",
     "ageGroup": "",
     "googleCategory": "",
-    "gtin": ""
+    "gtin": "",
+    "placeholder": true
   }
 ];
