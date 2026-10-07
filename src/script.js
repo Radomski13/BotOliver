@@ -262,7 +262,6 @@ function initBuyDialog() {
     const previewImage = dialog.querySelector('#preview-image');
     const previewName = dialog.querySelector('#preview-name');
     const previewPrice = dialog.querySelector('#preview-price');
-    const previewDesc = dialog.querySelector('#preview-desc');
     const sizeRow = dialog.querySelector('#size-row');
     const sizeSelect = dialog.querySelector('#size-select');
     const qtyInput = dialog.querySelector('#qty-input');
@@ -306,7 +305,6 @@ function initBuyDialog() {
         previewImage.classList.toggle('zoomable', !!selected.image);
         previewName.textContent = selected.name;
 
-        previewDesc.textContent = selected.description;
         const pageLink = dialog.querySelector('#preview-link');
         pageLink.href = `/product/${encodeURIComponent(selected.id)}`;
         pageLink.hidden = false;
